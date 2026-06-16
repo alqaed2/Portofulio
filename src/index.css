@@ -1,0 +1,86 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --font-sans: "Inter", "Cairo", system-ui, -apple-system, sans-serif;
+  --font-display: "Syne", "Cairo", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-gold-50: #fbf9f1;
+  --color-gold-100: #f4edd4;
+  --color-gold-200: #e7d8a2;
+  --color-gold-300: #d6bb68;
+  --color-gold-400: #c69f3c;
+  --color-gold-500: #af8629;
+  --color-gold-600: #8c671e;
+  --color-gold-700: #684a16;
+  --color-gold-800: #463010;
+  --color-gold-900: #251908;
+}
+
+@layer utilities {
+  /* Premium Metallic and Carbon Fiber Backdrops */
+  .dark-carbon-grid {
+    background-color: #0b0c10;
+    background-image: 
+      linear-gradient(45deg, #121319 25%, transparent 25%, transparent 75%, #121319 75%, #121319), 
+      linear-gradient(45deg, #121319 25%, #0b0c10 25%, #0b0c10 75%, #121319 75%, #121319);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+  }
+  
+  .blueprint-grid {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, rgba(175, 134, 41, 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(175, 134, 41, 0.07) 1px, transparent 1px);
+  }
+
+  .luxury-glass {
+    background: rgba(15, 17, 23, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(224, 185, 88, 0.15);
+  }
+
+  .luxury-glass-hover {
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .luxury-glass-hover:hover {
+    background: rgba(22, 26, 36, 0.85);
+    border-color: rgba(224, 185, 88, 0.35);
+    box-shadow: 0 10px 30px -10px rgba(175, 134, 41, 0.25);
+  }
+
+  /* Custom radial glowing orbs */
+  .glow-orb-gold {
+    background: radial-gradient(circle, rgba(175, 134, 41, 0.15) 0%, transparent 70%);
+  }
+  .glow-orb-titanium {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+  }
+}
+
+/* Custom scrollbar to match dark metal theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #08090c;
+}
+::-webkit-scrollbar-thumb {
+  background: #1b1e25;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cca525;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #08090c;
+  color: #e2e8f0;
+  overflow-x: hidden;
+}
