@@ -28,7 +28,7 @@ import InteractiveBlueprint from "./components/InteractiveBlueprint";
 import AIAssistant from "./components/AIAssistant";
 import { APP_TRANSLATIONS, CV_TIMELINE_TRANSLATED, STRENGTHS_TRANSLATED } from "./translations";
 
-import HERO_PORTRAIT from "./assets/images/mohamad_portrait_black_bg_1781646499215.jpg";
+import HERO_PORTRAIT from "./assets/images/architect_portrait_1781638336197.jpg";
 
 // Reusable scroll reveal component to provide VIP animation feel on all sections
 function RevealSection({ children, id, className = "" }: { children: ReactNode; id?: string; className?: string }) {
