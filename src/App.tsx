@@ -26,9 +26,12 @@ import { motion, AnimatePresence } from "motion/react";
 import ProjectShowcase from "./components/ProjectShowcase";
 import InteractiveBlueprint from "./components/InteractiveBlueprint";
 import AIAssistant from "./components/AIAssistant";
+import AnimatedCounter from "./components/AnimatedCounter";
 import { APP_TRANSLATIONS, CV_TIMELINE_TRANSLATED, STRENGTHS_TRANSLATED } from "./translations";
+import ContactFormModal from "./components/ContactFormModal";
+import ScrollToTop from "./components/ScrollToTop";
 
-import HERO_PORTRAIT from "./assets/images/architect_portrait_1781638336197.jpg";
+import HERO_PORTRAIT from "./assets/images/1781787875080.png";
 
 // Reusable scroll reveal component to provide VIP animation feel on all sections
 function RevealSection({ children, id, className = "" }: { children: ReactNode; id?: string; className?: string }) {
@@ -47,9 +50,10 @@ function RevealSection({ children, id, className = "" }: { children: ReactNode; 
 }
 
 export default function App() {
-  const [lang, setLang] = useState<"ar" | "en">("ar");
+  const [lang, setLang] = useState<"ar" | "en">("en");
   const [activeSection, setActiveSection] = useState("hero");
   const [selectedSubSkill, setSelectedSubSkill] = useState<string>("bim");
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   const t = APP_TRANSLATIONS[lang];
   const cvTimeline = CV_TIMELINE_TRANSLATED[lang];
@@ -113,8 +117,32 @@ export default function App() {
   const isRtl = lang === "ar";
   const dir = isRtl ? "rtl" : "ltr";
 
+  const heroContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const heroItemVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 16,
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-[#08090c] text-zinc-100 select-none overflow-x-hidden relative dark-carbon-grid" dir={dir}>
+    <div className="min-h-screen bg-[#030304] text-zinc-100 select-none overflow-x-hidden relative dark-carbon-grid" dir={dir}>
       
       {/* Decorative Orbs Backdrop */}
       <div className="absolute top-1/4 right-0 w-[500px] h-[500px] glow-orb-gold rounded-full pointer-events-none" />
@@ -137,16 +165,14 @@ export default function App() {
               <span>{lang === "ar" ? "English" : "العربية"}</span>
             </button>
 
-            <a
-              id="cta-nav-whatsapp"
-              href={CONTACT_INFO.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              id="cta-nav-contact"
+              onClick={() => setIsContactOpen(true)}
               className="px-4 py-2 text-xs sm:text-sm font-semibold bg-gold-400 hover:bg-gold-500 text-black rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(175,134,41,0.25)] hover:shadow-[0_0_25px_rgba(175,134,41,0.45)] cursor-pointer flex items-center gap-1.5"
             >
               <Smartphone className="w-4 h-4" />
               <span>{t.contactTitle}</span>
-            </a>
+            </button>
           </div>
 
           {/* Nav Links Center */}
@@ -189,7 +215,12 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Hero Portrait Column Left */}
-          <div className={`lg:col-span-5 flex justify-center relative ${isRtl ? "order-2 lg:order-1" : "order-2 lg:order-2"}`}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            className={`lg:col-span-5 flex justify-center relative ${isRtl ? "order-2 lg:order-1" : "order-2 lg:order-2"}`}
+          >
             <div className="relative w-full max-w-[440px] aspect-square group">
               
               {/* Outer tech wireframe bounding shapes */}
@@ -227,18 +258,26 @@ export default function App() {
                 CAD PIVOT_STAGE_REF
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Hero Context Column Right */}
-          <div className={`lg:col-span-7 space-y-6 ${isRtl ? "order-1 lg:order-2 text-right" : "order-1 lg:order-1 text-left"}`}>
+          <motion.div 
+            variants={heroContainerVariants}
+            initial="hidden"
+            animate="visible"
+            className={`lg:col-span-7 space-y-6 ${isRtl ? "order-1 lg:order-2 text-right" : "order-1 lg:order-1 text-left"}`}
+          >
             
             {/* Elite Floating Title */}
-            <div className={`inline-flex gap-2 items-center bg-gold-500/5 border border-gold-500/20 px-3 py-1 rounded-full text-xs sm:text-sm text-gold-400 font-sans font-medium ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <motion.div 
+              variants={heroItemVariants}
+              className={`inline-flex gap-2 items-center bg-gold-500/5 border border-gold-500/20 px-3 py-1 rounded-full text-xs sm:text-sm text-gold-400 font-sans font-medium ${isRtl ? "flex-row-reverse" : "flex-row"}`}
+            >
               <span>{t.heroBadge}</span>
               <Sparkles className="w-4 h-4 text-gold-400 shrink-0" />
-            </div>
+            </motion.div>
 
-            <div className="space-y-3">
+            <motion.div variants={heroItemVariants} className="space-y-3">
               <span className="text-xs sm:text-sm text-zinc-400 font-mono block uppercase tracking-widest">{t.heroSubtitle}</span>
               <h2 className="font-display font-extrabold text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-none">
                 {t.heroTitle1} <br />
@@ -246,35 +285,51 @@ export default function App() {
                   {t.heroTitle2}
                 </span>
               </h2>
-            </div>
+            </motion.div>
 
             {/* Incomparable Value Proposition paragraph */}
-            <p className={`text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl font-sans ${isRtl ? "ml-auto" : "mr-auto"}`}>
-              {t.heroParagraph}
-            </p>
+            <motion.div variants={heroItemVariants}>
+              <p className={`text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl font-sans ${isRtl ? "ml-auto" : "mr-auto"}`}>
+                {t.heroParagraph}
+              </p>
+            </motion.div>
 
             {/* CAD style dimension specs row */}
-            <div className={`grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-b border-zinc-800/80 py-4 max-w-3xl ${isRtl ? "ml-auto" : "mr-auto"}`}>
+            <motion.div 
+              variants={heroItemVariants}
+              className={`grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-b border-zinc-800/80 py-4 max-w-3xl ${isRtl ? "ml-auto" : "mr-auto"}`}
+            >
               <div>
                 <span className="text-[10px] text-zinc-500 block uppercase font-mono tracking-wider">{t.statCadTitle}</span>
-                <span className="text-lg sm:text-xl font-bold font-display text-white mt-1 block">{t.statCadVal}</span>
+                <span className="text-lg sm:text-xl font-bold font-display text-white mt-1 block">
+                  <AnimatedCounter value={t.statCadVal} />
+                </span>
               </div>
               <div>
                 <span className="text-[10px] text-zinc-500 block uppercase font-mono tracking-wider">{t.statSavingsTitle}</span>
-                <span className="text-lg sm:text-xl font-bold font-display text-gold-400 mt-1 block">{t.statSavingsVal}</span>
+                <span className="text-lg sm:text-xl font-bold font-display text-gold-400 mt-1 block">
+                  <AnimatedCounter value={t.statSavingsVal} />
+                </span>
               </div>
               <div>
                 <span className="text-[10px] text-zinc-500 block uppercase font-mono tracking-wider">{t.statGradTitle}</span>
-                <span className="text-lg sm:text-xl font-bold font-display text-emerald-400 mt-1 block">{t.statGradVal}</span>
+                <span className="text-lg sm:text-xl font-bold font-display text-emerald-400 mt-1 block">
+                  <AnimatedCounter value={t.statGradVal} />
+                </span>
               </div>
               <div>
                 <span className="text-[10px] text-zinc-500 block uppercase font-mono tracking-wider">{t.statVisualsTitle}</span>
-                <span className="text-lg sm:text-xl font-bold font-display text-white mt-1 block">{t.statVisualsVal}</span>
+                <span className="text-lg sm:text-xl font-bold font-display text-white mt-1 block">
+                  <AnimatedCounter value={t.statVisualsVal} />
+                </span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Quick Action CTAs */}
-            <div className={`flex gap-4 pt-4 flex-wrap ${isRtl ? "justify-end" : "justify-start"}`}>
+            <motion.div 
+              variants={heroItemVariants}
+              className={`flex gap-4 pt-4 flex-wrap ${isRtl ? "justify-end" : "justify-start"}`}
+            >
               <a
                 id="cta-hero-chat"
                 href="#ai-interview"
@@ -292,9 +347,9 @@ export default function App() {
                 <span>{t.btnEnterBlueprint}</span>
                 <Layers className="w-4 h-4 shrink-0" />
               </a>
-            </div>
+            </motion.div>
 
-          </div>
+          </motion.div>
 
         </div>
       </section>
@@ -433,7 +488,7 @@ export default function App() {
             </p>
           </div>
 
-          <ProjectShowcase lang={lang} />
+          <ProjectShowcase lang={lang} onContactClick={() => setIsContactOpen(true)} />
 
         </div>
       </RevealSection>
@@ -637,6 +692,16 @@ export default function App() {
           </span>
         </div>
       </footer>
+
+      {/* Floating Interactive Contact Solicitation Form Modal */}
+      <ContactFormModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+        lang={lang}
+      />
+
+      {/* Dynamic Scroll-to-Top Control Button */}
+      <ScrollToTop lang={lang} />
 
     </div>
   );

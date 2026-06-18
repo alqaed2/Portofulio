@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { MessageSquare, Send, Sparkles, User, HelpCircle, Loader2, RefreshCw } from "lucide-react";
+import { MessageSquare, Send, Sparkles, User, HelpCircle, Loader2, RefreshCw, Phone, PhoneOff, Mic, Volume2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChatMessage } from "../types";
 import { APP_TRANSLATIONS } from "../translations";
@@ -28,6 +28,238 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Live Voice API Connection State and Refs
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState<"connecting" | "ready" | "speaking" | "listening" | "error">("connecting");
+  const [voiceError, setVoiceError] = useState("");
+
+  const wsRef = useRef<WebSocket | null>(null);
+  const audioInputCtxRef = useRef<AudioContext | null>(null);
+  const audioOutputCtxRef = useRef<AudioContext | null>(null);
+  const micProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const audioQueueRef = useRef<AudioBufferSourceNode[]>([]);
+  const nextStartTimeRef = useRef<number>(0);
+
+  // Auto clean audio processes on component unmount
+  useEffect(() => {
+    return () => {
+      if (wsRef.current) {
+        try { wsRef.current.close(); } catch(e){}
+      }
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (micProcessorRef.current) {
+        micProcessorRef.current.disconnect();
+      }
+      if (audioInputCtxRef.current) {
+        try { audioInputCtxRef.current.close(); } catch(e){}
+      }
+      if (audioOutputCtxRef.current) {
+        try { audioOutputCtxRef.current.close(); } catch(e){}
+      }
+    };
+  }, []);
+
+  const playVoiceAudioChunk = (base64Audio: string) => {
+    const outputCtx = audioOutputCtxRef.current;
+    if (!outputCtx) return;
+
+    if (outputCtx.state === "suspended") {
+      outputCtx.resume();
+    }
+
+    // Convert base64 PCM back to Float32 sample values
+    const binary = window.atob(base64Audio);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const int16Array = new Int16Array(bytes.buffer);
+    const floats = new Float32Array(int16Array.length);
+    for (let i = 0; i < int16Array.length; i++) {
+      floats[i] = int16Array[i] / 32768;
+    }
+
+    if (floats.length === 0) return;
+
+    const buffer = outputCtx.createBuffer(1, floats.length, 24000); // 24kHz output
+    buffer.getChannelData(0).set(floats);
+
+    const source = outputCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(outputCtx.destination);
+
+    const currentTime = outputCtx.currentTime;
+    if (nextStartTimeRef.current < currentTime) {
+      nextStartTimeRef.current = currentTime + 0.05;
+    }
+
+    source.start(nextStartTimeRef.current);
+    nextStartTimeRef.current += buffer.duration;
+
+    audioQueueRef.current.push(source);
+    
+    source.onended = () => {
+      const idx = audioQueueRef.current.indexOf(source);
+      if (idx > -1) {
+        audioQueueRef.current.splice(idx, 1);
+      }
+      if (audioQueueRef.current.length === 0) {
+        setVoiceStatus("listening");
+      }
+    };
+  };
+
+  const stopVoiceAudioPlayer = () => {
+    audioQueueRef.current.forEach((src) => {
+      try { src.stop(); } catch (e) {}
+    });
+    audioQueueRef.current = [];
+    nextStartTimeRef.current = 0;
+  };
+
+  const endVoiceCall = () => {
+    // 1. Close WebSocket
+    if (wsRef.current) {
+      if (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) {
+        try { wsRef.current.close(); } catch(e){}
+      }
+      wsRef.current = null;
+    }
+
+    // 2. Stop mic capture stream
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((track) => track.stop());
+      micStreamRef.current = null;
+    }
+
+    // 3. Disconnect processor
+    if (micProcessorRef.current) {
+      try { micProcessorRef.current.disconnect(); } catch(e){}
+      micProcessorRef.current = null;
+    }
+
+    // 4. Close audio contexts
+    if (audioInputCtxRef.current) {
+      try { audioInputCtxRef.current.close(); } catch(e){}
+      audioInputCtxRef.current = null;
+    }
+    if (audioOutputCtxRef.current) {
+      try { audioOutputCtxRef.current.close(); } catch(e){}
+      audioOutputCtxRef.current = null;
+    }
+
+    // 5. Clear schedules
+    stopVoiceAudioPlayer();
+
+    setIsVoiceActive(false);
+  };
+
+  const startVoiceCall = async () => {
+    setIsVoiceActive(true);
+    setVoiceStatus("connecting");
+    setVoiceError("");
+    nextStartTimeRef.current = 0;
+
+    try {
+      // 1. Request microphone permission
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
+
+      // 2. Compute location connection url with proper protocol transition
+      const isHttps = window.location.protocol === "https:";
+      const wsUrl = `${isHttps ? "wss" : "ws"}://${window.location.host}/api/live-call`;
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        setVoiceStatus("ready");
+
+        // 3. Instantiate low-latency AudioContext instances
+        const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+        const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        audioInputCtxRef.current = inputCtx;
+        audioOutputCtxRef.current = outputCtx;
+
+        const source = inputCtx.createMediaStreamSource(stream);
+        const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+        micProcessorRef.current = processor;
+
+        source.connect(processor);
+        processor.connect(inputCtx.destination);
+
+        processor.onaudioprocess = (e) => {
+          if (ws.readyState === WebSocket.OPEN) {
+            const channelData = e.inputBuffer.getChannelData(0);
+            
+            // Convert Float32 data to PCM 16-Bit ArrayBuffer
+            const buffer = new ArrayBuffer(channelData.length * 2);
+            const view = new DataView(buffer);
+            for (let i = 0; i < channelData.length; i++) {
+              const sample = Math.max(-1, Math.min(1, channelData[i]));
+              view.setInt16(i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            }
+
+            // Encode ArrayBuffer into base64 for transmission
+            let binary = "";
+            const bytes = new Uint8Array(buffer);
+            const len = bytes.byteLength;
+            for (let j = 0; j < len; j++) {
+              binary += String.fromCharCode(bytes[j]);
+            }
+            const base64 = window.btoa(binary);
+
+            ws.send(JSON.stringify({ audio: base64 }));
+          }
+        };
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          
+          if (msg.error) {
+            setVoiceError(msg.error);
+            setVoiceStatus("error");
+            endVoiceCall();
+            return;
+          }
+
+          if (msg.interrupted) {
+            // Cancel current speaker buffers instantly
+            stopVoiceAudioPlayer();
+            setVoiceStatus("listening");
+            return;
+          }
+
+          if (msg.audio) {
+            setVoiceStatus("speaking");
+            playVoiceAudioChunk(msg.audio);
+          }
+        } catch (e) {
+          console.error("Failed to parsed voice socket chunk:", e);
+        }
+      };
+
+      ws.onerror = () => {
+        setVoiceError(lang === "ar" ? "تعذر الاستجابة مع الخادم الصوتي." : "Could not synchronize with the voice portal.");
+        setVoiceStatus("error");
+      };
+
+      ws.onclose = () => {
+        endVoiceCall();
+      };
+
+    } catch (err: any) {
+      console.error("Live call initialization error:", err);
+      setVoiceError(lang === "ar" ? "فشل تفعيل الميكروفون. يرجى تفعيل الصلاحية والمحاولة." : "Could not activate microphone. Please grant core permissions.");
+      setVoiceStatus("error");
+    }
+  };
 
   // Set initial welcome message depending on language
   useEffect(() => {
@@ -152,15 +384,40 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
 
       {/* Header Panel */}
       <div className={`flex justify-between items-center bg-black/60 px-5 py-4 border-b border-zinc-800 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <button
-          id="btn-reset-chat"
-          onClick={resetChat}
-          className="p-1 px-2.5 rounded border border-zinc-800 hover:border-gold-500/30 text-xs font-mono text-zinc-400 hover:text-gold-400 transition flex items-center gap-1.5 cursor-pointer"
-          title={isRtl ? "إعادة بدء المقابلة" : "Reset chat interview"}
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>{isRtl ? "إعادة ضبط" : "Reset"}</span>
-        </button>
+        <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+          <button
+            id="btn-reset-chat"
+            onClick={resetChat}
+            disabled={isVoiceActive}
+            className={`p-1 px-2.5 rounded border border-zinc-800 hover:border-gold-500/30 text-xs font-mono text-zinc-400 hover:text-gold-400 transition flex items-center gap-1.5 cursor-pointer ${isVoiceActive ? "opacity-50 cursor-not-allowed" : ""}`}
+            title={isRtl ? "إعادة بدء المقابلة" : "Reset chat interview"}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>{isRtl ? "إعادة ضبط" : "Reset"}</span>
+          </button>
+
+          {!isVoiceActive ? (
+            <button
+              id="btn-voice-call"
+              onClick={startVoiceCall}
+              className="p-1 px-2.5 rounded border border-gold-500/30 bg-gold-400/5 hover:bg-gold-400/10 text-xs font-mono text-gold-400 hover:text-gold-300 transition flex items-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(175,134,41,0.15)] animate-pulse"
+              title={isRtl ? "مكالمة صوتية مباشرة" : "Call Voice Agent live"}
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>{isRtl ? "مكالمة صوتية" : "Live Call"}</span>
+            </button>
+          ) : (
+            <button
+              id="btn-voice-call"
+              onClick={endVoiceCall}
+              className="p-1 px-2.5 rounded border border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-xs font-mono text-red-400 hover:text-red-300 transition flex items-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+              title={isRtl ? "إنهاء المكالمة" : "Disconnect call"}
+            >
+              <PhoneOff className="w-3.5 h-3.5" />
+              <span>{isRtl ? "إنهاء المكالمة" : "End Call"}</span>
+            </button>
+          )}
+        </div>
 
         <div className={`flex items-center gap-3 ${isRtl ? "text-right flex-row-reverse" : "text-left flex-row"}`}>
           <div className={isRtl ? "text-right" : "text-left"}>
@@ -168,7 +425,7 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
               <span className="text-[11px] bg-gold-400/10 text-gold-400 px-2 py-0.5 rounded font-mono border border-gold-500/20">AGENT AVATAR</span>
               <span>{isRtl ? "المستشار الاستشاري الذكي" : "Smart CAD Counsel"}</span>
             </h4>
-            <p className="text-[10px] sm:text-xs text-zinc-400 font-mono">POWERED BY GEMINI 2.0 & BIM DATA</p>
+            <p className="text-[10px] sm:text-xs text-zinc-400 font-mono">POWERED BY GEMINI 3.1 & BIM DATA</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-gold-400 p-[1px]">
             <div className="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
@@ -178,102 +435,197 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
         </div>
       </div>
 
-      {/* Chat Messages Body */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 blueprint-grid"
-      >
-        <AnimatePresence initial={false}>
-          {messages.map((m) => {
-            const isUser = m.role === "user";
-            return (
-              <motion.div
-                key={m.id}
-                initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className={`flex gap-3 max-w-[85%] ${isUser ? (isRtl ? "mr-auto flex-row-reverse" : "ml-auto flex-row") : (isRtl ? "ml-auto flex-row-reverse" : "mr-auto flex-row")}`}
-              >
-                {/* Avatar */}
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border z-10 ${
-                  isUser 
-                    ? "bg-zinc-800 border-zinc-700 text-white" 
-                    : "bg-gold-500/10 border-gold-500/30 text-gold-400"
-                }`}>
-                  {isUser ? <User className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-                </div>
-
-                {/* Message bubble */}
-                <div className="space-y-1">
-                  <div className={`p-3 rounded-2xl text-xs sm:text-sm leading-relaxed relative shadow-md ${isRtl ? "text-right" : "text-left"} ${
-                    isUser
-                      ? "bg-gradient-to-bl from-zinc-800 to-zinc-900 border border-zinc-700 text-zinc-100 rounded-tr-none"
-                      : "bg-gradient-to-br from-[#12141c] to-[#1a1c27] border border-gold-500/15 text-zinc-200 rounded-tl-none"
-                  }`}>
-                    <p className="whitespace-pre-line font-sans">{m.content}</p>
-                  </div>
-                  <div className={`text-[9px] text-zinc-500 font-mono px-1 col-span-1 ${isUser ? (isRtl ? "text-left" : "text-right") : (isRtl ? "text-right" : "text-left")}`}>
-                    {m.timestamp}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+      {isVoiceActive ? (
+        /* Real-Time Live Voice Controller Panel Overlay */
+        <div className="flex-1 flex flex-col justify-center items-center p-6 space-y-6 bg-[#090a0f]/95 backdrop-blur-md relative blueprint-grid">
           
-          {isLoading && (
+          {/* Animated Glowing Ring & Visualizer Core */}
+          <div className="relative w-40 h-40 flex items-center justify-center">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`flex gap-3 max-w-[85%] items-center ${isRtl ? "ml-auto" : "mr-auto"}`}
-            >
-              <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20 text-gold-400 flex items-center justify-center">
-                <Loader2 className="w-4 h-4 animate-spin text-gold-400" />
-              </div>
-              <div className="bg-[#12141c] border border-gold-500/10 p-3 rounded-2xl rounded-tl-none text-xs text-zinc-400 flex items-center gap-2 font-mono">
-                <span>{isRtl ? "يتم استجماع الأنماط الهندسية وتحليل المعايير..." : "Assembling structural frameworks & evaluating specs..."}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              animate={{
+                scale: voiceStatus === "speaking" ? [1, 1.25, 1] : [1, 1.08, 1],
+                opacity: voiceStatus === "speaking" ? [0.15, 0.45, 0.15] : [0.05, 0.15, 0.05],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: voiceStatus === "speaking" ? 1.4 : 3.2,
+                ease: "easeInOut"
+              }}
+              className="absolute inset-0 rounded-full bg-gold-400/20 border border-gold-500/10"
+            />
+            <motion.div
+              animate={{
+                scale: voiceStatus === "speaking" ? [1, 1.45, 1] : [1, 1.15, 1],
+                opacity: voiceStatus === "speaking" ? [0.08, 0.28, 0.08] : [0.02, 0.08, 0.02],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: voiceStatus === "speaking" ? 1.7 : 3.8,
+                ease: "easeInOut"
+              }}
+              className="absolute inset-[-20px] rounded-full bg-amber-500/10 border border-amber-600/5"
+            />
 
-      {/* Suggested chips panel */}
-      <div className={`px-4 py-2 border-t border-zinc-800 bg-black/40 flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-thin ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <HelpCircle className="w-4 h-4 text-gold-400 shrink-0" />
-        <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-          {suggestions.map((s, index) => (
-            <button
-              key={index}
-              id={`chat-suggestion-${index}`}
-              onClick={() => handleSendMessage(s.prompt)}
-              className="text-[11px] px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-800 hover:border-gold-500/50 text-zinc-300 hover:text-gold-200 transition-all cursor-pointer font-sans"
-            >
-              {s.text}
-            </button>
-          ))}
+            <div className="w-28 h-28 rounded-full bg-zinc-950 border-2 border-gold-400/30 shadow-[0_0_30px_rgba(175,134,41,0.15)] flex flex-col items-center justify-center space-y-2 z-10">
+              {voiceStatus === "speaking" ? (
+                <Volume2 className="w-8 h-8 text-gold-400 animate-bounce" />
+              ) : voiceStatus === "listening" || voiceStatus === "ready" ? (
+                <Mic className="w-8 h-8 text-gold-400 animate-pulse" />
+              ) : voiceStatus === "connecting" ? (
+                <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+              ) : (
+                <PhoneOff className="w-8 h-8 text-red-500" />
+              )}
+            </div>
+          </div>
+
+          {/* Connection Status Label */}
+          <div className="text-center space-y-2 z-10 max-w-sm">
+            <h4 className="font-display font-medium text-white text-base sm:text-lg">
+              {voiceStatus === "connecting" && (isRtl ? "جاري إنشاء الاتصال الصوتي الآمن..." : "Initializing secure voice channel...")}
+              {voiceStatus === "ready" && (isRtl ? "الاتصال نشط. يمكنك البدء في الحديث" : "Connected. Speak whenever ready...")}
+              {voiceStatus === "listening" && (isRtl ? "نصغي إليك ميكروفونياً... تحدث الآن" : "Listening... Speak now")}
+              {voiceStatus === "speaking" && (isRtl ? "المستشار يتحدث إليك..." : "Counsel is speaking...")}
+              {voiceStatus === "error" && (isRtl ? "تعذر تفعيل الاتصال" : "Voice Connection Failed")}
+            </h4>
+            <p className="text-[11px] sm:text-xs text-zinc-400 max-w-[320px] mx-auto leading-relaxed">
+              {voiceStatus === "error" ? voiceError : (isRtl ? "مكالمة صوتية ثنائية الاتجاه وفورية تعتمد على نموذج ذكاء اصطناعي فائق الاستجابة لمناقشة بورتفوليو وإمكانيات المهندس محمد." : "Enjoy a bi-directional, hands-free spoken dialogue powered by custom low-latency synthesis directly representing Mohamad's work.")}
+            </p>
+          </div>
+
+          {/* Voice active equalizing waveforms */}
+          <div className="flex justify-center items-center gap-1.5 h-10 z-10">
+            {[...Array(12)].map((_, idx) => (
+              <motion.div
+                key={idx}
+                animate={{
+                  height: voiceStatus === "speaking"
+                    ? [8, Math.random() * 32 + 12, 8]
+                    : voiceStatus === "listening"
+                    ? [8, Math.random() * 16 + 8, 8]
+                    : [6, 6, 6]
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 0.35 + idx * 0.05,
+                  ease: "easeInOut"
+                }}
+                className={`w-1 rounded-full ${voiceStatus === "speaking" ? "bg-gold-500" : "bg-zinc-700"}`}
+              />
+            ))}
+          </div>
+
+          {/* Hang-Up Button */}
+          <button
+            id="btn-voice-hangup"
+            onClick={endVoiceCall}
+            className="px-6 py-2 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition duration-200 cursor-pointer shadow-[0_4px_15px_rgba(220,38,38,0.3)] z-10"
+          >
+            <PhoneOff className="w-3.5 h-3.5" />
+            <span>{isRtl ? "قطع الاتصال" : "Disconnect Call"}</span>
+          </button>
         </div>
-      </div>
+      ) : (
+        /* Regular Multi-Turn Chat messages component */
+        <>
+          {/* Chat Messages Body */}
+          <div 
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 blueprint-grid"
+          >
+            <AnimatePresence initial={false}>
+              {messages.map((m) => {
+                const isUser = m.role === "user";
+                return (
+                  <motion.div
+                    key={m.id}
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className={`flex gap-3 max-w-[85%] ${isUser ? (isRtl ? "mr-auto flex-row-reverse" : "ml-auto flex-row") : (isRtl ? "ml-auto flex-row-reverse" : "mr-auto flex-row")}`}
+                  >
+                    {/* Avatar */}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border z-10 ${
+                      isUser 
+                        ? "bg-zinc-800 border-zinc-700 text-white" 
+                        : "bg-gold-500/10 border-gold-500/30 text-gold-400"
+                    }`}>
+                      {isUser ? <User className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+                    </div>
 
-      {/* Chat Input form footer */}
-      <div className={`p-4 bg-zinc-950 border-t border-zinc-800 flex gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <input
-          id="chat-user-input"
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyPress}
-          placeholder={t.aiUserPlaceholder}
-          className={`flex-1 bg-black text-white border border-zinc-800 rounded-xl px-4 py-3 text-xs sm:text-sm focus:outline-none focus:border-gold-500 font-sans ${isRtl ? "text-right" : "text-left"}`}
-        />
-        <button
-          id="btn-chat-send"
-          onClick={() => handleSendMessage(input)}
-          disabled={!input.trim() || isLoading}
-          className={`px-4 bg-gold-500 hover:bg-gold-400 text-black font-semibold rounded-xl flex items-center justify-center transition-all cursor-pointer ${(!input.trim() || isLoading) ? "opacity-50 cursor-not-allowed" : "shadow-[0_0_15px_rgba(175,134,41,0.35)]"}`}
-        >
-          <Send className="w-4 h-4" />
-        </button>
-      </div>
+                    {/* Message bubble */}
+                    <div className="space-y-1">
+                      <div className={`p-3 rounded-2xl text-xs sm:text-sm leading-relaxed relative shadow-md ${isRtl ? "text-right" : "text-left"} ${
+                        isUser
+                          ? "bg-gradient-to-bl from-zinc-800 to-zinc-900 border border-zinc-700 text-zinc-100 rounded-tr-none"
+                          : "bg-gradient-to-br from-[#12141c] to-[#1a1c27] border border-gold-500/15 text-zinc-200 rounded-tl-none"
+                      }`}>
+                        <p className="whitespace-pre-line font-sans">{m.content}</p>
+                      </div>
+                      <div className={`text-[9px] text-zinc-500 font-mono px-1 col-span-1 ${isUser ? (isRtl ? "text-left" : "text-right") : (isRtl ? "text-right" : "text-left")}`}>
+                        {m.timestamp}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+              
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className={`flex gap-3 max-w-[85%] items-center ${isRtl ? "ml-auto" : "mr-auto"}`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20 text-gold-400 flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin text-gold-400" />
+                  </div>
+                  <div className="bg-[#12141c] border border-gold-500/10 p-3 rounded-2xl rounded-tl-none text-xs text-zinc-400 flex items-center gap-2 font-mono">
+                    <span>{isRtl ? "يتم استجماع الأنماط الهندسية وتحليل المعايير..." : "Assembling structural frameworks & evaluating specs..."}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Suggested chips panel */}
+          <div className={`px-4 py-2 border-t border-zinc-800 bg-black/40 flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-thin ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <HelpCircle className="w-4 h-4 text-gold-400 shrink-0" />
+            <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+              {suggestions.map((s, index) => (
+                <button
+                  key={index}
+                  id={`chat-suggestion-${index}`}
+                  onClick={() => handleSendMessage(s.prompt)}
+                  className="text-[11px] px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-800 hover:border-gold-500/50 text-zinc-300 hover:text-gold-200 transition-all cursor-pointer font-sans"
+                >
+                  {s.text}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Chat Input form footer */}
+          <div className={`p-4 bg-zinc-950 border-t border-zinc-800 flex gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <input
+              id="chat-user-input"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder={t.aiUserPlaceholder}
+              className={`flex-1 bg-black text-white border border-zinc-800 rounded-xl px-4 py-3 text-xs sm:text-sm focus:outline-none focus:border-gold-500 font-sans ${isRtl ? "text-right" : "text-left"}`}
+            />
+            <button
+              id="btn-chat-send"
+              onClick={() => handleSendMessage(input)}
+              disabled={!input.trim() || isLoading}
+              className={`px-4 bg-gold-500 hover:bg-gold-400 text-black font-semibold rounded-xl flex items-center justify-center transition-all cursor-pointer ${(!input.trim() || isLoading) ? "opacity-50 cursor-not-allowed" : "shadow-[0_0_15px_rgba(175,134,41,0.35)]"}`}
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        </>
+      )}
 
     </div>
   );

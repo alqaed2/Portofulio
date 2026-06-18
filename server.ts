@@ -1,8 +1,9 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import dotenv from "dotenv";
+import { WebSocketServer } from "ws";
 
 dotenv.config();
 
@@ -198,8 +199,81 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server is running at http://localhost:${PORT} in ${process.env.NODE_ENV || "development"} mode`);
+  });
+
+  const wss = new WebSocketServer({ server, path: "/api/live-call" });
+
+  wss.on("connection", async (ws) => {
+    console.log("Client connected for live voice call");
+    let session: any = null;
+    try {
+      const client = getGeminiClient();
+      session = await client.live.connect({
+        model: "gemini-3.1-flash-live-preview",
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
+          },
+          systemInstruction: `
+You are the interactive, elite, real-time voice assistant of Architect Mohamad Kaid Al-Hudaifi.
+Your goal is to represent Eng. Mohamad to recruiters, prospective clients, and other engineers in a highly sophisticated, professional, and friendly manner.
+Eng. Mohamad Al-Hudaifi is a highly competent VIP Architect & Interior Designer who graduated from Ibb University with an Excellent grade (acclaimed thesis: Al-Adhuf and Al-Tahoon 2050 planning project).
+
+Guidelines:
+- Match the caller's spoken language fluidly:
+  - If they speak Arabic, answer them in fluent, elite, professional Arabic ("الأستاذ الفاضل ... المهندس محمد يرحب بكم ...").
+  - If they speak English, answer in flawless, fluent English.
+- Be articulate, premium, and concise. Don't speak excessively in one turn (since it's a voice call).
+- Highlight Mohamad's unmatchable skills including high-end interior rendering (Lumion & Twinmotion), full production-ready working designs (Revit BIM & AutoCAD), and site execution supervision.
+`,
+        },
+        callbacks: {
+          onmessage: (message: any) => {
+            const audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (audio) {
+              ws.send(JSON.stringify({ audio }));
+            }
+            if (message.serverContent?.interrupted) {
+              ws.send(JSON.stringify({ interrupted: true }));
+            }
+          },
+          onclose: () => {
+            console.log("Gemini Live session closed");
+            ws.close();
+          },
+          onerror: (err) => {
+            console.error("Gemini Live session error:", err);
+            ws.send(JSON.stringify({ error: err.message }));
+          }
+        },
+      });
+
+      ws.on("message", (data) => {
+        try {
+          const msg = JSON.parse(data.toString());
+          if (msg.audio) {
+            session.sendRealtimeInput({
+              audio: { data: msg.audio, mimeType: "audio/pcm;rate=16000" }
+            });
+          }
+        } catch (e) {
+          console.error("Error parsing user audio on server:", e);
+        }
+      });
+
+      ws.on("close", () => {
+        if (session) {
+          session.close();
+        }
+      });
+    } catch (err: any) {
+      console.error("Live call handshake failed:", err);
+      ws.send(JSON.stringify({ error: "Failed to initialize Live Voice connection: " + err.message }));
+      ws.close();
+    }
   });
 }
 

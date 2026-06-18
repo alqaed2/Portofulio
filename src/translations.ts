@@ -112,7 +112,28 @@ export const APP_TRANSLATIONS = {
     modalAchievementsTitle: "نقاط تميز هندسية VIP / KEY ACHIEVEMENTS",
     modalProgramsTitle: "البرنامج الإنشائي والنظري المطبّق",
     modalEfficiencyTitle: "أثر الكفاءة الهندسية",
-    modalEfficiencyDesc: "تم احتساب كشط الأحمال الحرارية وتحجيم استهلاك الطاقة وتقليل منسوب الهدر المادي من خلال تخطيط المخططات التنفيذية بدقة متناهية تحت الإشراف المعماري الدقيق للمهندس محمد الحذيفي."
+    modalEfficiencyDesc: "تم احتساب كشط الأحمال الحرارية وتحجيم استهلاك الطاقة وتقليل منسوب الهدر المادي من خلال تخطيط المخططات التنفيذية بدقة متناهية تحت الإشراف المعماري الدقيق للمهندس محمد الحذيفي.",
+    
+    // Contact Modal
+    contactModalTitle: "طلب استشارة معمارية وتواصل رسمي",
+    contactModalSubtitle: "يرجى تعبئة التفاصيل أدناه، وسيتصل بك المهندس محمد الحذيفي خلال 24 ساعة بمقترح كروكي أولي لمشروعك.",
+    fieldName: "الاسم الكامل",
+    fieldNamePlaceholder: "الاسم الثنائي أو الثلاثي الكرم",
+    fieldEmail: "البريد الإلكتروني",
+    fieldEmailPlaceholder: "name@example.com",
+    fieldProjectDetails: "تفاصيل ونطاق المشروع الاستثماري",
+    fieldProjectDetailsPlaceholder: "اكتب وصفاً معمارياً مبدئياً للفكرة (سكني، فيلا، مجمع تجاري، تضاريس الموقع...)",
+    fieldNewsletter: "الاشتراك في النشرة المعمارية النخبوية للهندسة والاستدامة ومشاريعنا الجديدة.",
+    fieldNewsletterSmall: "نعم، أود الحصول على النشرات الدورية مجاناً",
+    btnSubmitForm: "إرسال طلب الاستشارة ومطابقة البيانات",
+    btnSubmitting: "جاري المزامنة والتسجيل المباشر...",
+    contactSuccess: "تم تسليم تفاصيل مشروعك بنجاح للمكتب الهندسي!",
+    contactSuccessSub: "شكرًا لثقتك. تم إرسال بريد تأكيدي تلقائي، وسيقوم المهندس محمد بالتواصل معك لاستعراض مخططات التفوق الخاصة بالفكرة قريباً وبناء أواصر التعاون.",
+    contactValidationName: "يرجى إدخال اسمك الثنائي على الأقل (أكثر من 3 أحرف)",
+    contactValidationEmail: "صيغة البريد الإلكتروني غير صحيحة",
+    contactValidationDetails: "يرجى كتابة لمحة مختصرة عن تفاصيل مشروعك (10 أحرف على الأقل)",
+    btnClose: "إغلاق النافذة",
+    btnScrollTop: "التمرير للأعلى"
   },
   en: {
     // Navigation
@@ -227,7 +248,28 @@ export const APP_TRANSLATIONS = {
     modalAchievementsTitle: "KEY BLUEPRINT ACHIEVEMENTS",
     modalProgramsTitle: "Implementation Programs Applied",
     modalEfficiencyTitle: "Structural Efficiency Impact",
-    modalEfficiencyDesc: "Calculated heat loads, mitigated energy footprint gaps, and reduced raw structural waste by 15% through meticulous execution drawings designed under Eng. Mohamad Al-Hudaifi's direct supervision."
+    modalEfficiencyDesc: "Calculated heat loads, mitigated energy footprint gaps, and reduced raw structural waste by 15% through meticulous execution drawings designed under Eng. Mohamad Al-Hudaifi's direct supervision.",
+
+    // Contact Modal
+    contactModalTitle: "Request Elite Architectural Consultation",
+    contactModalSubtitle: "Please fill in the details below. Architect Mohamad will contact you within 24 hours with a custom preliminary design pitch.",
+    fieldName: "Full Name",
+    fieldNamePlaceholder: "Your full noble name",
+    fieldEmail: "Email Address",
+    fieldEmailPlaceholder: "name@example.com",
+    fieldProjectDetails: "Investment Project Scope & Details",
+    fieldProjectDetailsPlaceholder: "Describe your basic spatial scope (Residential, double-height villa, commercial tower, topography status...)",
+    fieldNewsletter: "Subscribe to our elite bi-weekly architectural journal and receive exclusive green-energy efficiency case studies & new project releases.",
+    fieldNewsletterSmall: "Yes, I would like to receive free updates & journals",
+    btnSubmitForm: "Transmit Solicitation & Formulate Specs",
+    btnSubmitting: "Synchronizing Data Sets...",
+    contactSuccess: "Project parameters successfully transmitted!",
+    contactSuccessSub: "Thank you for your trust. A secure digital confirmation has been logged. Engineer Mohamad will trace back your reference ID shortly.",
+    contactValidationName: "Please enter your name (at least 3 characters)",
+    contactValidationEmail: "Please provide a valid email format",
+    contactValidationDetails: "Please describe your project outline briefly (at least 10 characters)",
+    btnClose: "Close Portal",
+    btnScrollTop: "Scroll to top"
   }
 };
 

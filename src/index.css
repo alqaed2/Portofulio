@@ -21,42 +21,42 @@
 @layer utilities {
   /* Premium Metallic and Carbon Fiber Backdrops */
   .dark-carbon-grid {
-    background-color: #0b0c10;
+    background-color: #030304;
     background-image: 
-      linear-gradient(45deg, #121319 25%, transparent 25%, transparent 75%, #121319 75%, #121319), 
-      linear-gradient(45deg, #121319 25%, #0b0c10 25%, #0b0c10 75%, #121319 75%, #121319);
-    background-size: 40px 40px;
-    background-position: 0 0, 20px 20px;
+      linear-gradient(45deg, #08080a 25%, transparent 25%, transparent 75%, #08080a 75%, #08080a), 
+      linear-gradient(45deg, #08080a 25%, #030304 25%, #030304 75%, #08080a 75%, #08080a);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
   }
   
   .blueprint-grid {
     background-size: 40px 40px;
     background-image: 
-      linear-gradient(to right, rgba(175, 134, 41, 0.07) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(175, 134, 41, 0.07) 1px, transparent 1px);
+      linear-gradient(to right, rgba(175, 134, 41, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(175, 134, 41, 0.05) 1px, transparent 1px);
   }
 
   .luxury-glass {
-    background: rgba(15, 17, 23, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(224, 185, 88, 0.15);
+    background: rgba(8, 9, 12, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(224, 185, 88, 0.12);
   }
 
   .luxury-glass-hover {
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .luxury-glass-hover:hover {
-    background: rgba(22, 26, 36, 0.85);
-    border-color: rgba(224, 185, 88, 0.35);
-    box-shadow: 0 10px 30px -10px rgba(175, 134, 41, 0.25);
+    background: rgba(12, 14, 18, 0.95);
+    border-color: rgba(224, 185, 88, 0.3);
+    box-shadow: 0 10px 30px -15px rgba(175, 134, 41, 0.3);
   }
 
   /* Custom radial glowing orbs */
   .glow-orb-gold {
-    background: radial-gradient(circle, rgba(175, 134, 41, 0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(175, 134, 41, 0.12) 0%, transparent 70%);
   }
   .glow-orb-titanium {
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
   }
 }
 
@@ -65,14 +65,14 @@
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #08090c;
+  background: #030304;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1b1e25;
+  background: #111216;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #cca525;
+  background: #9d751e;
 }
 
 html {
@@ -80,7 +80,7 @@ html {
 }
 
 body {
-  background-color: #08090c;
-  color: #e2e8f0;
+  background-color: #030304;
+  color: #f1f5f9;
   overflow-x: hidden;
 }

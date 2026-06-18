@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Project } from "../types";
 import { PROJECTS_TRANSLATED, APP_TRANSLATIONS } from "../translations";
 
-export default function ProjectShowcase({ lang }: { lang: "ar" | "en" }) {
+export default function ProjectShowcase({ lang, onContactClick }: { lang: "ar" | "en"; onContactClick?: () => void }) {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -252,12 +252,16 @@ export default function ProjectShowcase({ lang }: { lang: "ar" | "en" }) {
 
               {/* Footer contact quick link */}
               <div className="p-4 bg-zinc-950 border-t border-zinc-900 flex justify-between items-center px-6">
-                <a
-                  href="mailto:alqaid694@gmail.com"
-                  className="text-xs text-gold-400 hover:text-gold-300 transition font-mono border border-gold-500/20 rounded-lg px-3 py-1 bg-black/60"
+                <button
+                  id="btn-project-cta-contact"
+                  onClick={() => {
+                    setSelectedProject(null);
+                    if (onContactClick) onContactClick();
+                  }}
+                  className="text-xs text-gold-400 hover:text-gold-300 transition font-mono border border-gold-500/20 rounded-lg px-3.5 py-1.5 bg-black/60 cursor-pointer"
                 >
                   {t.modalBtnContact}
-                </a>
+                </button>
                 <span className="text-xs text-zinc-500 font-mono">BIM ARCHITECTURE STAGE 2026/2050</span>
               </div>
 
