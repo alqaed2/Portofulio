@@ -1,6 +1,6 @@
 {
-  "name": "Mohamad Al-Hudaifi Architectural Portfolio",
-  "description": "The elite architectural and interior design portfolio of Architect Mohamad Kaid Al-Hudaifi, featuring stunning 3D visualizers, professional CV highlights, and an interactive AI interview assistant.",
+  "name": "Mohammed Al-Hothaifi Architectural Portfolio",
+  "description": "The elite architectural and interior design portfolio of Architect Mohammed Al-Hothaifi, featuring stunning 3D visualizers, professional CV highlights, and an interactive AI interview assistant.",
   "requestFramePermissions": ["microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

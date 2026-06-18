@@ -17,7 +17,7 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
 
   const suggestionsEn = [
     { text: "How is the 2050 plan special?", prompt: "Explain the philosophy and master planning design for your thesis project: Al-Adhuf and Al-Tahoon 2050 masterplan." },
-    { text: "What makes your skills unmatchable?", prompt: "What are the unmatchable skills and qualities that make Eng. Mohamad Al-Hudaifi a perfect choice for leading developers?" },
+    { text: "What makes your skills unmatchable?", prompt: "What are the unmatchable skills and qualities that make Eng. Mohammed Al-Hothaifi a perfect choice for leading developers?" },
     { text: "What about your bridge supervision?", prompt: "Tell me in detail about your hands-on construction site and highway bridge supervision experience." },
     { text: "Which software workflows do you prefer?", prompt: "Tell me about your preferred software workflows and the importance of Revit (BIM) and AutoCAD." },
   ];
@@ -62,6 +62,22 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
       }
     };
   }, []);
+
+  // Listen for external trigger-voice-call event to start call immediately
+  useEffect(() => {
+    const handleTrigger = () => {
+      const el = document.getElementById("ai-interview");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      startVoiceCall();
+    };
+
+    window.addEventListener("trigger-voice-call", handleTrigger);
+    return () => {
+      window.removeEventListener("trigger-voice-call", handleTrigger);
+    };
+  }, [lang]); // depends on lang for translations in startVoiceCall if any
 
   const playVoiceAudioChunk = (base64Audio: string) => {
     const outputCtx = audioOutputCtxRef.current;
@@ -166,11 +182,20 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
     nextStartTimeRef.current = 0;
 
     try {
-      // 1. Request microphone permission
+      // 1. Check if mediaDevices and AudioContext are supported
+      if (typeof window === "undefined" || !navigator?.mediaDevices?.getUserMedia) {
+        throw new Error("Microphone access is not supported by your browser or connection is not secure");
+      }
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) {
+        throw new Error("Audio synthesis context is not supported in this browser version");
+      }
+
+      // 2. Request microphone permission
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       micStreamRef.current = stream;
 
-      // 2. Compute location connection url with proper protocol transition
+      // 3. Compute location connection url with proper protocol transition
       const isHttps = window.location.protocol === "https:";
       const wsUrl = `${isHttps ? "wss" : "ws"}://${window.location.host}/api/live-call`;
       const ws = new WebSocket(wsUrl);
@@ -179,9 +204,9 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
       ws.onopen = () => {
         setVoiceStatus("ready");
 
-        // 3. Instantiate low-latency AudioContext instances
-        const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-        const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        // 4. Instantiate low-latency AudioContext instances
+        const inputCtx = new AudioContextClass({ sampleRate: 16000 });
+        const outputCtx = new AudioContextClass({ sampleRate: 24000 });
         audioInputCtxRef.current = inputCtx;
         audioOutputCtxRef.current = outputCtx;
 
@@ -255,8 +280,13 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
       };
 
     } catch (err: any) {
-      console.error("Live call initialization error:", err);
-      setVoiceError(lang === "ar" ? "فشل تفعيل الميكروفون. يرجى تفعيل الصلاحية والمحاولة." : "Could not activate microphone. Please grant core permissions.");
+      console.warn("Live voice activation bypassed or suspended:", err?.message || err);
+      const isPermissionDenied = err?.name === "NotAllowedError" || err?.message?.toLowerCase().includes("permission");
+      setVoiceError(
+        isPermissionDenied
+          ? (lang === "ar" ? "تم رفض صلاحية الميكروفون. يرجى تفعيل الصلاحية من إعدادات المتصفح للمتابعة صوتاً." : "Microphone access was denied. Please allow microphone permissions in your browser settings to continue.")
+          : (lang === "ar" ? `تعذر البدء بالمكالمة الصوتية: ${err?.message || "خطأ غير معروف"}` : `Could not activate voice assistant: ${err?.message || "unsupported sandbox environment"}`)
+      );
       setVoiceStatus("error");
     }
   };
@@ -327,21 +357,21 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
       setTimeout(() => {
         let fallbackText = lang === "ar" 
           ? "أعتذر، يبدو أن مفتاح ومستشعر الذكاء الاصطناعي يستعدان للنهوض. كبديل فوري كلي الثقة: المهندس محمد الحذيفي متاح دائماً للتواصل المباشر والتوظيف المباشر عبر البريد الإلكتروني: alqaid694@gmail.com أو الواتساب: 967779240291+ لمناقشة شراكات التنمية العقارية الفاخرة لشركتكم."
-          : "Pardon, the AI engine is currently on standby calibrating. As a direct offline channel of absolute confidence, Eng. Mohamad Al-Hudaifi is readily available for contracts / recruitment via email: alqaid694@gmail.com or WhatsApp: +967779240291.";
+          : "Pardon, the AI engine is currently on standby calibrating. As a direct offline channel of absolute confidence, Eng. Mohammed Al-Hothaifi is readily available for contracts / recruitment via email: alqaid694@gmail.com or WhatsApp: +967779240291.";
         
         const lowerText = textToSend.toLowerCase();
         if (lowerText.includes("طاحون") || lowerText.includes("الأحذوف") || lowerText.includes("2050") || lowerText.includes("plan") || lowerText.includes("thesis")) {
           fallbackText = lang === "ar"
             ? "مشروع تخرج المهندس محمد الحذيفي (تخطيط وتصميم قاع الأحذوف وسوق الطاحون ورؤية 2050 المستقبلية بجامعة إب بتقدير ممتاز تمثيلي) يرتكز على دمج الطراز التقليدي مع التنمية المستدامة، حيث تمت هيكلة الأسواق لتضم مسارات خلوية ونظم فلترة بيئية متكاملة، وحل مشكلات الازدحامات والمرافق العامة مع عرض محاكاة 3D سينمائية مبهرة جداً تبرز دقة وجودة مخرجاته الهندسية."
-            : "Eng. Mohamad Al-Hudaifi's academic thesis (Urban Reclamation of Al-Adhuf and Al-Tahoon 2050, earning an Excellent representative grade from Ibb University) integrates regional Yemeni tradition with modern climate-resilience. The grid features optimized pedestrian flow, automated market distribution zones, sustainable materials, and cinematic 3D simulations that present flawless design resolution.";
+            : "Eng. Mohammed Al-Hothaifi's academic thesis (Urban Reclamation of Al-Adhuf and Al-Tahoon 2050, earning an Excellent representative grade from Ibb University) integrates regional Yemeni tradition with modern climate-resilience. The grid features optimized pedestrian flow, automated market distribution zones, sustainable materials, and cinematic 3D simulations that present flawless design resolution.";
         } else if (lowerText.includes("تميز") || lowerText.includes("مقارن") || lowerText.includes("قوة") || lowerText.includes("unmatch") || lowerText.includes("skills")) {
           fallbackText = lang === "ar"
             ? "يتميز المهندس محمد الحذيفي بدمجه الفذ بين التصميم المعماري الإبداعي الفخم والتخطيط الدقيق (باستخدام Revit و AutoCAD و 3Ds Max) وبين القدرة الميدانية الصارمة على الإشراف الموقعي في مشاريع البنية التحتية والمنشآت والجسور، مما يعطيه تفوقاً شاسعاً لفهم متطلبات التنفيذ وتقليل هدر الكلفة بنسبة 15%."
-            : "Eng. Mohamad is distinguished by his rare dual-mastery of creative luxurious architectural/interior designs (using Revit BIM, AutoCAD, and 3Ds Max) and his rigid on-site infrastructure supervision. This mitigates design slips and guarantees at least 15% budget protection through immaculate engineering documentation.";
+            : "Eng. Mohammed is distinguished by his rare dual-mastery of creative luxurious architectural/interior designs (using Revit BIM, AutoCAD, and 3Ds Max) and his rigid on-site infrastructure supervision. This mitigates design slips and guarantees at least 15% budget protection through immaculate engineering documentation.";
         } else if (lowerText.includes("موقعي") || lowerText.includes("إشراف") || lowerText.includes("جسور") || lowerText.includes("bridge") || lowerText.includes("site") || lowerText.includes("conduc")) {
           fallbackText = lang === "ar"
             ? "عمل المهندس محمد كمشرف موقعي على تنفيذ أعمال المنشآت الهندسية والجسور والكباري والطرق، حيث أدار مطابقة التصاميم وضمان جودة الخرسانة واختبارات التربة وحساب الكميات بدقة VIP لا تسمح بأي أخطاء تنفيذية وتضمن سلامة واستدامة المنشأة هندسياً."
-            : "As an on-site supervisor for complex highway projects, bridges, and pipelines, Mohamad directed quality audits, reinforcement spacer alignment, fresh concrete mix validation, and level checks. This guarantees the executed asset perfectly conforms to structural formulas without margin for site mistakes.";
+            : "As an on-site supervisor for complex highway projects, bridges, and pipelines, Mohammed directed quality audits, reinforcement spacer alignment, fresh concrete mix validation, and level checks. This guarantees the executed asset perfectly conforms to structural formulas without margin for site mistakes.";
         }
 
         const assistantMsg: ChatMessage = {
@@ -489,7 +519,7 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
               {voiceStatus === "error" && (isRtl ? "تعذر تفعيل الاتصال" : "Voice Connection Failed")}
             </h4>
             <p className="text-[11px] sm:text-xs text-zinc-400 max-w-[320px] mx-auto leading-relaxed">
-              {voiceStatus === "error" ? voiceError : (isRtl ? "مكالمة صوتية ثنائية الاتجاه وفورية تعتمد على نموذج ذكاء اصطناعي فائق الاستجابة لمناقشة بورتفوليو وإمكانيات المهندس محمد." : "Enjoy a bi-directional, hands-free spoken dialogue powered by custom low-latency synthesis directly representing Mohamad's work.")}
+              {voiceStatus === "error" ? voiceError : (isRtl ? "مكالمة صوتية ثنائية الاتجاه وفورية تعتمد على نموذج ذكاء اصطناعي فائق الاستجابة لمناقشة بورتفوليو وإمكانيات المهندس محمد." : "Enjoy a bi-directional, hands-free spoken dialogue powered by custom low-latency synthesis directly representing Mohammed's work.")}
             </p>
           </div>
 

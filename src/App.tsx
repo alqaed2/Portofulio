@@ -22,7 +22,7 @@ import {
   Check,
   Smartphone
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import ProjectShowcase from "./components/ProjectShowcase";
 import InteractiveBlueprint from "./components/InteractiveBlueprint";
 import AIAssistant from "./components/AIAssistant";
@@ -55,6 +55,12 @@ export default function App() {
   const [selectedSubSkill, setSelectedSubSkill] = useState<string>("bim");
   const [isContactOpen, setIsContactOpen] = useState(false);
 
+  // Subtle scroll-driven parallax background orbs calculation
+  const { scrollY } = useScroll();
+  const orbY1 = useTransform(scrollY, [0, 3000], [0, 320]);
+  const orbY2 = useTransform(scrollY, [0, 4000], [0, -260]);
+  const orbY3 = useTransform(scrollY, [0, 5000], [0, 180]);
+
   const t = APP_TRANSLATIONS[lang];
   const cvTimeline = CV_TIMELINE_TRANSLATED[lang];
   const strengthsText = STRENGTHS_TRANSLATED[lang];
@@ -68,7 +74,6 @@ export default function App() {
   };
 
   const navLinks = [
-    { id: "hero", label: t.navHome },
     { id: "skills", label: t.navSkills },
     { id: "projects", label: t.navProjects },
     { id: "blueprint", label: t.navBlueprint },
@@ -79,14 +84,14 @@ export default function App() {
   const subSkills = {
     bim: {
       title: lang === "ar" ? "إدماج النمذجة وإدارة دورة البناء (BIM)" : "Integrated BIM & Life-Cycle Management",
-      desc: lang === "ar" ? "يعمل المهندس محمد على توظيف منهجية نمذجة معلومات البناء بشكل كامل لربط الجداول الحسابية، الأحمال الإنشائية، والجمال المعماري في بيئة ثلاثية الأبعاد خالية تماماً من تضاربات العناصر." : "Mohamad integrates BIM methodology to align structural loads, cost estimations, and architectural aesthetics in clash-free 3D models.",
+      desc: lang === "ar" ? "يعمل المهندس محمد على توظيف منهجية نمذجة معلومات البناء بشكل كامل لربط الجداول الحسابية، الأحمال الإنشائية، والجمال المعماري في بيئة ثلاثية الأبعاد خالية تماماً من تضاربات العناصر." : "Mohammed integrates BIM methodology to align structural loads, cost estimations, and architectural aesthetics in clash-free 3D models.",
       features: lang === "ar" 
         ? ["تنسيق الأثاث الداخلي إلكترونياً مع الهيكل الخرساني والكهربائي", "استباق تضاربات الأعمدة مع مخارج التهوية (HVAC Collision Check)", "إدارة متكاملة للتكلفة وكميات حديد التسليح والمواد بدقة 100%"]
         : ["Digital sync of interior layouts with structural and MEP models", "Advanced detection of HVAC layouts with concrete structures (Zero clashes)", "Full bill of quantities and exact rebar estimation matched by automated software"]
     },
     detail: {
       title: lang === "ar" ? "إعداد المخططات التنفيذية والورشة (Shop Drawings)" : "Meticulous Shop Drawings & Detail Drafting",
-      desc: lang === "ar" ? "تصميم المخططات التنفيذية الدقيقة جداً هو الفصل الفارق بين الخيال المعماري والواقع؛ محمد يوفر تفاصيل ربط البورسلان، تآكلات فواصل التمدد الإنشائي، والزوايا المعدنية." : "Drafting hyper-accurate shop drawings is the bridge between imagination and reality. Mohamad specializes in exact joint calculations, porcelain tiling patterns, and structural water barriers.",
+      desc: lang === "ar" ? "تصميم المخططات التنفيذية الدقيقة جداً هو الفصل الفارق بين الخيال المعماري والواقع؛ محمد يوفر تفاصيل ربط البورسلان، تآكلات فواصل التمدد الإنشائي، والزوايا المعدنية." : "Drafting hyper-accurate shop drawings is the bridge between imagination and reality. Mohammed specializes in exact joint calculations, porcelain tiling patterns, and structural water barriers.",
       features: lang === "ar"
         ? ["تفاصيل التركيبات الملامسة لشبكات الصرف والإضاءة الخرسانية", "تقليص ميزانيات الهدر في الموقع بنسبة 15% بفضل دقة المخطط", "ملفات AutoCAD و Revit جاهزة للتطبيق من قبل العمال مباشرة دون تساؤلات"]
         : ["Execution detailing for drainage slopes, acoustic buffers, and concealed lighting channels", "Mitigating site construction waste by 15% through flawless detail documentation", "Production-ready AutoCAD & Revit exports for straightforward masonry execution"]
@@ -145,127 +150,140 @@ export default function App() {
     <div className="min-h-screen bg-[#030304] text-zinc-100 select-none overflow-x-hidden relative dark-carbon-grid" dir={dir}>
       
       {/* Decorative Orbs Backdrop */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] glow-orb-gold rounded-full pointer-events-none" />
-      <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] glow-orb-gold rounded-full opacity-40 pointer-events-none" />
+      <motion.div style={{ y: orbY1 }} className="absolute top-[12%] -right-32 w-[550px] h-[550px] glow-orb-gold rounded-full pointer-events-none z-0" />
+      <motion.div style={{ y: orbY2 }} className="absolute top-[48%] -left-32 w-[500px] h-[500px] glow-orb-gold rounded-full opacity-35 pointer-events-none z-0" />
+      <motion.div style={{ y: orbY3 }} className="absolute bottom-[8%] right-[10%] w-[400px] h-[400px] glow-orb-gold rounded-full opacity-25 pointer-events-none z-0" />
 
       {/* Floating Header Navigation */}
       <header className="sticky top-0 z-40 bg-zinc-950/85 backdrop-blur-xl border-b border-gold-500/10 transition-all duration-300">
-        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+        <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex justify-between items-center ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
           
-          {/* Quick Connect CTA Left & Language Switcher */}
-          <div className={`flex items-center gap-3 ${isRtl ? "flex-row" : "flex-row-reverse"}`}>
-            {/* Highly Polished Golden Language Switcher Toggle */}
-            <button
-              id="language-switcher"
-              onClick={() => setLang(lang === "ar" ? "en" : "ar")}
-              className="px-3.5 py-2 rounded-xl border border-gold-500/20 bg-zinc-900/80 hover:bg-gold-500/10 text-gold-400 hover:text-gold-300 text-xs font-mono font-bold tracking-wider flex items-center gap-1.5 cursor-pointer transition-all duration-300 shadow-md"
-              title={isRtl ? "Switch to English" : "تغيير إلى اللغة العربية"}
-            >
-              <Globe className="w-4 h-4 text-gold-400" />
-              <span>{lang === "ar" ? "English" : "العربية"}</span>
-            </button>
-
-            <button
-              id="cta-nav-contact"
-              onClick={() => setIsContactOpen(true)}
-              className="px-4 py-2 text-xs sm:text-sm font-semibold bg-gold-400 hover:bg-gold-500 text-black rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(175,134,41,0.25)] hover:shadow-[0_0_25px_rgba(175,134,41,0.45)] cursor-pointer flex items-center gap-1.5"
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>{t.contactTitle}</span>
-            </button>
+          {/* Logo Brand / Identity (Perfect Responsive Design Layout) */}
+          <div className={`flex items-center gap-2.5 sm:gap-3.5 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-amber-600 via-yellow-500 to-gold-400 p-[1.5px] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.15)]">
+              <div className="w-full h-full bg-zinc-950 rounded-[10px] flex items-center justify-center">
+                <Compass className="w-4 h-4 sm:w-5.5 h-5.5 text-gold-400 animate-spin" style={{ animationDuration: "18s" }} />
+              </div>
+            </div>
+            <div className={isRtl ? "text-right" : "text-left"}>
+              <h1 className="font-display font-black text-xs sm:text-base md:text-lg lg:text-xl text-white tracking-tight leading-none whitespace-nowrap">
+                {isRtl ? "محمد الحذيفي" : "Mohammed Al-Hothaifi"}
+              </h1>
+              <span className="text-[8px] sm:text-[9px] md:text-[10px] text-gold-400 font-mono tracking-widest block font-bold uppercase mt-1 leading-none">
+                {isRtl ? "مهندس معماري وديكور" : "ARCHITECT & DECORATOR"}
+              </span>
+            </div>
           </div>
 
-          {/* Nav Links Center */}
-          <nav className="hidden md:flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-zinc-900">
+          {/* Nav Links Center (Hidden on tablet/mobile screens to preserve absolute elegant layout space) */}
+          <nav className="hidden lg:flex items-center gap-1.5 bg-black/45 p-1 rounded-xl border border-zinc-900/80 backdrop-blur-md">
             {navLinks.map((link) => (
               <a
                 key={link.id}
                 id={`nav-link-${link.id}`}
                 href={`#${link.id}`}
                 onClick={() => setActiveSection(link.id)}
-                className={`px-3.5 py-1.5 text-xs sm:text-sm rounded-lg transition-all font-sans ${activeSection === link.id ? 'bg-gold-500/10 text-gold-400 font-semibold' : 'text-zinc-400 hover:text-white'}`}
+                className={`px-3.5 py-1.5 text-[11px] lg:text-xs rounded-lg transition-all duration-300 font-sans font-medium tracking-wide uppercase ${activeSection === link.id ? 'bg-gold-500/15 text-gold-400 font-semibold border border-gold-500/10' : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'}`}
               >
                 {link.label}
               </a>
             ))}
           </nav>
 
-          {/* Logo Brand Right */}
-          <div className={`flex items-center gap-3 ${isRtl ? "text-right flex-row" : "text-left flex-row-reverse"}`}>
-            <div className={isRtl ? "text-right" : "text-left"}>
-              <h1 className="font-display font-black text-base sm:text-xl text-white tracking-tight">
-                {isRtl ? "محمد الحذيفي" : "Mohamad Al-Hudaifi"}
-              </h1>
-              <span className="text-[10px] text-gold-400 font-mono tracking-widest block font-medium">
-                {isRtl ? "معماري وموقع إنشائي استشاري" : "ARCHITECT & SITE ENGINEER"}
-              </span>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-600 to-gold-400 p-[1px]">
-              <div className="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center">
-                <Compass className="w-5 h-5 text-gold-400 animate-spin" style={{ animationDuration: '24s' }} />
-              </div>
-            </div>
+          {/* Quick Connect CTA Left & Language Switcher (Positions opposite of logo dynamically) */}
+          <div className={`flex items-center gap-1.5 sm:gap-3 ${isRtl ? "flex-row" : "flex-row-reverse"}`}>
+            {/* Highly Polished Golden Language Switcher Toggle */}
+            <button
+              id="language-switcher"
+              onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+              className="p-1.5 px-2.5 sm:px-3.5 sm:py-2 rounded-xl border border-gold-500/15 bg-zinc-900/60 hover:bg-gold-500/10 text-gold-400 hover:text-gold-300 text-[10px] sm:text-xs font-mono font-bold tracking-wider flex items-center gap-1 sm:gap-1.5 cursor-pointer transition-all duration-300 shadow-md"
+              title={isRtl ? "Switch to English" : "تغيير إلى اللغة العربية"}
+            >
+              <Globe className="w-3.5 h-3.5 text-gold-400 animate-pulse" />
+              <span className="hidden sm:inline">{lang === "ar" ? "English" : "العربية"}</span>
+              <span className="inline sm:hidden">{lang === "ar" ? "EN" : "AR"}</span>
+            </button>
+
+            <button
+              id="cta-nav-contact"
+              onClick={() => setIsContactOpen(true)}
+              className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-semibold bg-gold-400 hover:bg-gold-500 text-black rounded-lg transition-all duration-300 shadow-[0_0_15px_rgba(175,134,41,0.2)] hover:shadow-[0_0_25px_rgba(175,134,41,0.4)] cursor-pointer flex items-center gap-1.5"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>{t.contactTitle}</span>
+            </button>
           </div>
 
         </div>
       </header>
 
       {/* Hero Master Entrance Section */}
-      <section id="hero" className="relative pt-12 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Hero Portrait Column Left */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.94 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
-            className={`lg:col-span-5 flex justify-center relative ${isRtl ? "order-2 lg:order-1" : "order-2 lg:order-2"}`}
-          >
-            <div className="relative w-full max-w-[440px] aspect-square group">
+      <section id="hero" className="relative pb-24 overflow-hidden">
+        
+        {/* Majestic Full Screen Horizontal Cover Image */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full relative border-b border-gold-500/15 overflow-hidden bg-zinc-950/40"
+        >
+          <div className="relative w-full h-[55vh] min-h-[360px] sm:h-[65vh] lg:h-[75vh] flex items-center justify-center">
+            
+            {/* Subtle Ambient Vignette & Blueprint grid background behind / on top */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#030304] via-transparent to-[#030304]/70 z-10" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(175,134,41,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(175,134,41,0.015)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none z-10" />
+
+            {/* Majestic Image stretched horizontally */}
+            <img
+              src={HERO_PORTRAIT}
+              alt="المهندس محمد الحذيفي المعمار الفخم"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-top sm:object-center scale-[1.01] hover:scale-[1.03] transition-all duration-1000 ease-out"
+            />
+
+            {/* Floating technical indicators HUD overlay (Responsive positions) */}
+            <div className="absolute inset-x-0 bottom-6 z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pointer-events-none">
               
-              {/* Outer tech wireframe bounding shapes */}
-              <div className="absolute -inset-4 border border-dashed border-gold-500/30 rounded-3xl animate-spin" style={{ animationDuration: '60s' }} />
-              <div className="absolute -inset-2 border border-zinc-800 rounded-3xl" />
-              
-              {/* Floating vector callout badges (CAD Style) */}
-              <div className={`absolute -top-3 z-20 bg-black/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gold-500/30 font-mono text-[9px] text-zinc-400 leading-tight ${isRtl ? "-right-6 text-right" : "-left-6 text-left"}`}>
-                <span className="text-gold-400 block font-bold font-sans">{t.verifiedTitle}</span>
+              {/* Left/Right callouts depending on RTL */}
+              <div className={`bg-black/90 backdrop-blur-sm px-3.5 py-1.5 rounded-lg border border-gold-500/20 text-zinc-400 text-[9px] sm:text-[10px] font-mono leading-relaxed shadow-lg ${isRtl ? "order-1" : "order-2"}`}>
+                <span className="text-gold-400 block font-bold font-sans text-[10px] sm:text-xs mb-0.5">{t.verifiedTitle}</span>
                 <span>{t.verifiedLicence}</span>
               </div>
-
-              <div className={`absolute -bottom-4 z-20 bg-black/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-gold-500/30 font-mono text-[9px] text-zinc-400 leading-tight ${isRtl ? "-left-6 text-right" : "-right-6 text-left"}`}>
-                <span className="text-gold-400 block font-bold font-sans">BIM LEVEL 8</span>
-                <span>STRUCTURAL AUDITING</span>
-              </div>
-
-              {/* Precise Dimension Line CAD styling */}
-              <div className={`absolute top-10 bottom-10 w-[1px] bg-gradient-to-b from-transparent via-gold-500/40 to-transparent flex items-center justify-center ${isRtl ? "-right-12" : "-left-12"}`}>
-                <span className="text-[8px] font-mono text-gold-400 bg-zinc-950 px-1 rotate-90">H: 1845 mm</span>
-              </div>
-
-              {/* The Actual premium Portrait */}
-              <div className="w-full h-full rounded-2xl overflow-hidden border-2 border-gold-500/20 shadow-[0_30px_70px_rgba(0,0,0,0.8)] relative">
-                <img
-                  src={HERO_PORTRAIT}
-                  alt="المهندس محمد الحذيفي المعمار الفخم"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-[1.02] transition-all duration-700"
-                />
-              </div>
-
-              {/* Geometric floating wire */}
-              <div className={`absolute -bottom-6 bg-black/90 px-3 py-1 rounded border border-zinc-800 text-[10px] text-zinc-500 font-mono ${isRtl ? "right-10" : "left-10"}`}>
-                CAD PIVOT_STAGE_REF
-              </div>
             </div>
-          </motion.div>
 
-          {/* Hero Context Column Right */}
+            {/* Central Floating Voice Call CTA Button */}
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 pointer-events-auto flex flex-col items-center gap-1.5 w-max max-w-[90%] text-center">
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("trigger-voice-call"));
+                }}
+                className="group relative flex items-center justify-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-full bg-gradient-to-r from-gold-400 via-gold-500 to-amber-600 text-black font-semibold text-[11px] sm:text-xs md:text-sm uppercase tracking-wider shadow-[0_0_30px_rgba(217,119,6,0.5)] hover:shadow-[0_0_40px_rgba(217,119,6,0.85)] hover:scale-[1.04] active:scale-95 transition-all duration-300 border border-gold-300 cursor-pointer"
+              >
+                {/* Double Pulsing luxurious ring ripples */}
+                <span className="absolute inset-0 rounded-full bg-gold-400/20 animate-ping pointer-events-none" style={{ animationDuration: '2s' }} />
+                <span className="absolute inset-0 rounded-full bg-gold-400/10 animate-ping pointer-events-none" style={{ animationDuration: '3s', animationDelay: '0.4s' }} />
+
+                <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-bounce shrink-0" />
+                <span className="font-sans font-extrabold tracking-wide">
+                  {isRtl ? "بدء مكالمة صوتية فائقة بالذكاء الاصطناعي" : "Start Live AI Voice Call"}
+                </span>
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-black animate-pulse shrink-0" />
+              </button>
+              
+              <span className="text-[9px] sm:text-[10px] font-mono text-zinc-400/90 bg-black/85 backdrop-blur-md px-3 py-1 rounded-full border border-gold-500/10 uppercase tracking-widest pointer-events-none animate-pulse">
+                {isRtl ? "تحدّث مباشرة الآن مع ممثل محمد الأوتوماتيكي" : "Talk interactively now with Mohammed's AI agent"}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Hero Context Text Content Block */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
           <motion.div 
             variants={heroContainerVariants}
             initial="hidden"
             animate="visible"
-            className={`lg:col-span-7 space-y-6 ${isRtl ? "order-1 lg:order-2 text-right" : "order-1 lg:order-1 text-left"}`}
+            className={`space-y-6 ${isRtl ? "text-right" : "text-left"}`}
           >
             
             {/* Elite Floating Title */}
@@ -289,7 +307,7 @@ export default function App() {
 
             {/* Incomparable Value Proposition paragraph */}
             <motion.div variants={heroItemVariants}>
-              <p className={`text-sm sm:text-base text-zinc-300 leading-relaxed max-w-2xl font-sans ${isRtl ? "ml-auto" : "mr-auto"}`}>
+              <p className={`text-sm sm:text-base text-zinc-300 leading-relaxed max-w-4xl font-sans ${isRtl ? "ml-auto" : "mr-auto"}`}>
                 {t.heroParagraph}
               </p>
             </motion.div>
@@ -297,7 +315,7 @@ export default function App() {
             {/* CAD style dimension specs row */}
             <motion.div 
               variants={heroItemVariants}
-              className={`grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-b border-zinc-800/80 py-4 max-w-3xl ${isRtl ? "ml-auto" : "mr-auto"}`}
+              className={`grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-b border-zinc-800/80 py-4 max-w-4xl ${isRtl ? "ml-auto" : "mr-auto"}`}
             >
               <div>
                 <span className="text-[10px] text-zinc-500 block uppercase font-mono tracking-wider">{t.statCadTitle}</span>
@@ -350,7 +368,6 @@ export default function App() {
             </motion.div>
 
           </motion.div>
-
         </div>
       </section>
 
@@ -583,10 +600,10 @@ export default function App() {
             <div className={`flex items-center gap-3 ${isRtl ? "justify-end flex-row" : "justify-start flex-row-reverse"}`}>
               <div className={isRtl ? "text-right" : "text-left"}>
                 <h4 className="font-display font-extrabold text-lg text-white">
-                  {isRtl ? "محمد الحذيفي" : "Mohamad Al-Hudaifi"}
+                  {isRtl ? "محمد الحذيفي" : "Mohammed Al-Hothaifi"}
                 </h4>
                 <p className="text-xs text-gold-400 font-mono tracking-wider font-medium">
-                  {isRtl ? "معماري وموقع إنشائي استشاري" : "ARCHITECT & SITE ENGINEER"}
+                  {isRtl ? "مهندس معماري وديكور" : "ARCHITECT & DECORATOR"}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-600 to-gold-400 p-[1px]">
