@@ -527,7 +527,7 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
           <div className="flex justify-center items-center gap-1.5 h-10 z-10">
             {[...Array(12)].map((_, idx) => (
               <motion.div
-                key={idx}
+                key={`eq-bar-${idx}`}
                 animate={{
                   height: voiceStatus === "speaking"
                     ? [8, Math.random() * 32 + 12, 8]
@@ -564,11 +564,11 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
             className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 blueprint-grid"
           >
             <AnimatePresence initial={false}>
-              {messages.map((m) => {
+              {messages.map((m, idx) => {
                 const isUser = m.role === "user";
                 return (
                   <motion.div
-                    key={m.id}
+                    key={`msg-${lang}-${m.role}-${m.id || idx}-${idx}`}
                     initial={{ opacity: 0, y: 10, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.3 }}
@@ -623,7 +623,7 @@ export default function AIAssistant({ lang }: { lang: "ar" | "en" }) {
             <div className={`flex gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
               {suggestions.map((s, index) => (
                 <button
-                  key={index}
+                  key={`suggestion-${lang}-${index}`}
                   id={`chat-suggestion-${index}`}
                   onClick={() => handleSendMessage(s.prompt)}
                   className="text-[11px] px-3 py-1.5 rounded-full bg-zinc-950 border border-zinc-800 hover:border-gold-500/50 text-zinc-300 hover:text-gold-200 transition-all cursor-pointer font-sans"

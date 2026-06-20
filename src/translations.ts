@@ -16,7 +16,7 @@ export const APP_TRANSLATIONS = {
     heroSubtitle: "MASTER OF SPATIAL DESIGN",
     heroTitle1: "المهندس الاستشاري",
     heroTitle2: "محمد الحذيفي",
-    heroParagraph: "مهندس معماري ومصمم داخلي أتميز بتقديم حلول تصميمية إبداعية ذكية، وإخراج معماري احترافي فخم لا يقارن بالآخرين. شغفي يكمن في دمج الجمال البصري الفاخر بدقة المخططات التنفيذية، مدعوماً بخلفيتنا الميدانية الصارمة في الإشراف الإنشائي الموقعي والتحقق الدقيق من تفاصيل الكباري، الجسور، وتخطي تضاربات التنفيذ. نسعى دوماً لبناء صروح حضرية مستدامة تعزز كفاءة ونفقات الاستثمار بنسبة 100%.",
+    heroParagraph: "مهندس معماري شغوف بإنتاج أفكار إبتكارية عصرية مستدامة وتقديم حلول تصميمية ابداعية ذكية   وتجسيدها بإخراج معماري احترافي فخم لايقارن. شغفي يكمن في دمج الجمال البصري الفاخر بدقة المخططات التنفيذية مستخدماً احدث البرامج والادوات التقنية الحديثة في المجال ومدعوماً بخبرة ميدانية صارمة في الاشراف الانشائي الموقعي والتحقق من التفاصيل الدقيقة وتخطي تضاربات التنفيذ تحقيقاً لهدفي الأسمى دوماً بناء صروح حضرية مستدامة ترفع مستوى الحياة الفارهة وتعزز كفاءة ونفقات الاستثمار بإمتياز.",
     
     // Hero Stats
     statCadTitle: "دقة التنفيذ والورشة",
@@ -152,7 +152,7 @@ export const APP_TRANSLATIONS = {
     heroSubtitle: "MASTER OF SPATIAL DESIGN",
     heroTitle1: "Consultant Architect",
     heroTitle2: "Mohammed Al-Hothaifi",
-    heroParagraph: "An architect and interior designer highly distinguished by delivering intelligent creative solutions, high-end visual luxury, and peerless precision. My passion lies in fusing exquisite visual elegance with meticulous shop drawings (BIM), backed by extensive field experience supervising complex bridges, highways, and infrastructure to eliminate structural clashes. We strive to craft sustainable environments that maximize yield and optimize client budgets with 100% precision.",
+    heroParagraph: "An architect passionate about producing innovative, modern, and sustainable design concepts, delivering smart creative design solutions, and embodying them in peerless, high-end professional architectural visualization. My passion lies in fusing exquisite luxury aesthetics with meticulous executive shop drawings, utilizing the latest software and modern technical tools in the field. This is backed by rigorous on-site construction supervision, verification of delicate details, and overcoming execution clashes to achieve my ultimate goal: building sustainable urban landmarks that elevate modern luxury and optimize investment efficiency and expenditures with excellence.",
     
     // Hero Stats
     statCadTitle: "Execution & Shop Drawings",

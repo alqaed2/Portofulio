@@ -20,16 +20,19 @@ import {
   ChevronRight,
   ShieldCheck,
   Check,
-  Smartphone
+  Smartphone,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import ProjectShowcase from "./components/ProjectShowcase";
-import InteractiveBlueprint from "./components/InteractiveBlueprint";
+import InteractiveBlueprint from "./InteractiveBlueprint";
 import AIAssistant from "./components/AIAssistant";
 import AnimatedCounter from "./components/AnimatedCounter";
 import { APP_TRANSLATIONS, CV_TIMELINE_TRANSLATED, STRENGTHS_TRANSLATED } from "./translations";
 import ContactFormModal from "./components/ContactFormModal";
 import ScrollToTop from "./components/ScrollToTop";
+import CVModal from "./components/CVModal";
+import VideoShortsShowcase from "./components/VideoShortsShowcase";
 
 import HERO_PORTRAIT from "./assets/images/1781787875080.png";
 
@@ -54,6 +57,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState("hero");
   const [selectedSubSkill, setSelectedSubSkill] = useState<string>("bim");
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isCvOpen, setIsCvOpen] = useState(false);
 
   // Subtle scroll-driven parallax background orbs calculation
   const { scrollY } = useScroll();
@@ -159,15 +163,18 @@ export default function App() {
         <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex justify-between items-center ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
           
           {/* Logo Brand / Identity (Perfect Responsive Design Layout) */}
-          <div className={`flex items-center gap-2.5 sm:gap-3.5 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-amber-600 via-yellow-500 to-gold-400 p-[1.5px] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.15)]">
-              <div className="w-full h-full bg-zinc-950 rounded-[10px] flex items-center justify-center">
-                <Compass className="w-4 h-4 sm:w-5.5 h-5.5 text-gold-400 animate-spin" style={{ animationDuration: "18s" }} />
+          <div className={`flex items-center gap-3 sm:gap-4 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <div className="relative w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-amber-600 via-yellow-500 to-gold-400 p-[1.5px] flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] transition-all duration-300 hover:scale-105 cursor-pointer group">
+              <div className="w-full h-full bg-zinc-950 rounded-[10px] flex items-center justify-center relative overflow-hidden">
+                <Compass className="w-4.5 h-4.5 sm:w-6 sm:h-6 text-gold-400 group-hover:rotate-45 transition-transform duration-700" style={{ animation: "spin 25s linear infinite" }} />
+                {/* Sleek golden reflection swipe */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
               </div>
             </div>
             <div className={isRtl ? "text-right" : "text-left"}>
-              <h1 className="font-display font-black text-xs sm:text-base md:text-lg lg:text-xl text-white tracking-tight leading-none whitespace-nowrap">
+              <h1 className="font-display font-black text-sm sm:text-base md:text-lg lg:text-xl text-white tracking-tight leading-none whitespace-nowrap flex items-center gap-1.5">
                 {isRtl ? "محمد الحذيفي" : "Mohammed Al-Hothaifi"}
+                <span className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse inline-block" />
               </h1>
               <span className="text-[8px] sm:text-[9px] md:text-[10px] text-gold-400 font-mono tracking-widest block font-bold uppercase mt-1 leading-none">
                 {isRtl ? "مهندس معماري وديكور" : "ARCHITECT & DECORATOR"}
@@ -179,7 +186,7 @@ export default function App() {
           <nav className="hidden lg:flex items-center gap-1.5 bg-black/45 p-1 rounded-xl border border-zinc-900/80 backdrop-blur-md">
             {navLinks.map((link) => (
               <a
-                key={link.id}
+                key={`header-${lang}-${link.id}`}
                 id={`nav-link-${link.id}`}
                 href={`#${link.id}`}
                 onClick={() => setActiveSection(link.id)}
@@ -365,6 +372,21 @@ export default function App() {
                 <span>{t.btnEnterBlueprint}</span>
                 <Layers className="w-4 h-4 shrink-0" />
               </a>
+
+              <button
+                id="cta-hero-cv"
+                type="button"
+                onClick={() => setIsCvOpen(true)}
+                className="px-6 py-3.5 rounded-xl border border-gold-500/30 bg-zinc-950/65 hover:bg-gold-500/10 text-gold-400 hover:text-gold-300 font-semibold text-xs sm:text-sm transition-all duration-300 shadow-md cursor-pointer flex items-center gap-2"
+              >
+                <span>{lang === "ar" ? "تحميل وعرض السيرة الذاتية (CV)" : "View & Download CV (PDF)"}</span>
+                <FileText className="w-4 h-4 shrink-0 text-gold-400 animate-pulse" />
+              </button>
+            </motion.div>
+
+            {/* Live Audit & Video Shorts Presentation Grid Component */}
+            <motion.div variants={heroItemVariants}>
+              <VideoShortsShowcase lang={lang} />
             </motion.div>
 
           </motion.div>
@@ -386,7 +408,7 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {strengths.map((str, idx) => (
               <div 
-                key={idx}
+                key={`strength-${lang}-${idx}`}
                 className="luxury-glass p-6 rounded-2xl relative overflow-hidden group hover:border-gold-500/30 transition-all duration-500"
               >
                 <div className="absolute top-0 right-0 w-16 h-16 bg-gold-400/5 rounded-full blur-xl pointer-events-none" />
@@ -425,7 +447,7 @@ export default function App() {
                 { id: "supervision", label: t.competencyTabSupervision, icon: <ShieldCheck className={`w-4 h-4 ${isRtl ? "ml-2" : "mr-2"}`} /> }
               ].map((sub) => (
                 <button
-                  key={sub.id}
+                  key={`skill-tab-${lang}-${sub.id}`}
                   id={`btn-skill-tabs-${sub.id}`}
                   onClick={() => setSelectedSubSkill(sub.id)}
                   className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 relative overflow-hidden group cursor-pointer ${isRtl ? "text-right flex-row" : "text-left flex-row-reverse"} ${selectedSubSkill === sub.id ? 'bg-gold-500/10 border-gold-400 text-gold-300 shadow-md' : 'bg-black/30 border-zinc-800/80 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'}`}
@@ -450,7 +472,7 @@ export default function App() {
           <div className="lg:col-span-6">
             <AnimatePresence mode="wait">
               <motion.div
-                key={selectedSubSkill}
+                key={`skill-display-${lang}-${selectedSubSkill}`}
                 initial={{ opacity: 0, x: isRtl ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: isRtl ? 20 : -20 }}
@@ -475,7 +497,7 @@ export default function App() {
 
                 <ul className={`space-y-3 font-sans text-xs sm:text-sm ${isRtl ? "text-right" : "text-left"}`}>
                   {subSkills[selectedSubSkill as keyof typeof subSkills].features.map((feat, i) => (
-                    <li key={i} className={`flex gap-2 text-zinc-300 ${isRtl ? "justify-end flex-row" : "justify-start flex-row-reverse"}`}>
+                    <li key={`feat-${selectedSubSkill}-${lang}-${i}`} className={`flex gap-2 text-zinc-300 ${isRtl ? "justify-end flex-row" : "justify-start flex-row-reverse"}`}>
                       <span>{feat}</span>
                       <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     </li>
@@ -558,7 +580,7 @@ export default function App() {
         {/* Career Timeline */}
         <div className={`relative max-w-4xl mx-auto space-y-12 border-gold-400/30 ${isRtl ? "border-r pr-6 sm:pr-8" : "border-l pl-6 sm:pl-8"}`}>
           {cvTimeline.map((item, idx) => (
-            <div key={idx} className={`relative group ${isRtl ? "text-right" : "text-left"}`}>
+            <div key={`timeline-${lang}-${item.year}-${idx}`} className={`relative group ${isRtl ? "text-right" : "text-left"}`}>
               
               {/* Timeline diamond point badge */}
               <div className={`absolute top-1.5 w-4 h-4 bg-[#08090c] border-2 border-gold-400 rotate-45 flex items-center justify-center transition-all group-hover:bg-gold-500 ${isRtl ? "-right-[34px] sm:-right-[42px]" : "-left-[34px] sm:-left-[42px]"}`}>
@@ -652,7 +674,7 @@ export default function App() {
             <h5 className="font-sans font-bold text-xs sm:text-sm text-gold-400 tracking-wider font-mono">{t.footerShortMap}</h5>
             <ul className="space-y-2 text-xs sm:text-sm">
               {navLinks.map((link) => (
-                <li key={link.id}>
+                <li key={`footer-${lang}-${link.id}`}>
                   <a href={`#${link.id}`} className="text-zinc-400 hover:text-gold-300 transition-colors font-sans">
                     {link.label}
                   </a>
@@ -690,7 +712,7 @@ export default function App() {
             
             <button
               id="btn-print-portfolio"
-              onClick={() => window.print()}
+              onClick={() => setIsCvOpen(true)}
               className="w-full text-center text-[10px] text-zinc-500 hover:text-zinc-300 border border-zinc-800 rounded-lg py-1.5 transition flex items-center justify-center gap-1.5 font-mono cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -715,6 +737,13 @@ export default function App() {
         isOpen={isContactOpen}
         onClose={() => setIsContactOpen(false)}
         lang={lang}
+      />
+
+      {/* Elite Executive Interactive CV Viewer Modal */}
+      <CVModal
+        isOpen={isCvOpen}
+        onClose={() => setIsCvOpen(false)}
+        initialLang={lang}
       />
 
       {/* Dynamic Scroll-to-Top Control Button */}

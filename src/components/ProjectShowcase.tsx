@@ -33,7 +33,7 @@ export default function ProjectShowcase({ lang, onContactClick }: { lang: "ar" |
       <div className="flex flex-wrap gap-2 justify-center items-center p-1.5 bg-black/40 rounded-2xl border border-zinc-800/80 max-w-2xl mx-auto backdrop-blur-md">
         {categories.map((cat) => (
           <button
-            key={cat.id}
+            key={`project-category-${lang}-${cat.id}`}
             id={`tab-project-cat-${cat.id}`}
             onClick={() => setActiveTab(cat.id)}
             className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all duration-300 font-sans cursor-pointer ${activeTab === cat.id ? 'bg-gold-500 text-black font-semibold shadow-lg' : 'text-zinc-400 hover:text-white'}`}
@@ -47,7 +47,7 @@ export default function ProjectShowcase({ lang, onContactClick }: { lang: "ar" |
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {filteredProjects.map((project, idx) => (
           <motion.div
-            key={project.id}
+            key={`project-card-${lang}-${project.id}`}
             layout
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -210,7 +210,7 @@ export default function ProjectShowcase({ lang, onContactClick }: { lang: "ar" |
                     
                     <ul className="space-y-3 font-sans text-xs sm:text-sm">
                       {selectedProject.highlights.map((hlt, i) => (
-                        <li key={i} className={`flex gap-3 leading-relaxed ${lang === "ar" ? "justify-end text-zinc-300" : "justify-start text-zinc-300"}`}>
+                        <li key={`highlight-${selectedProject.id}-${lang}-${i}`} className={`flex gap-3 leading-relaxed ${lang === "ar" ? "justify-end text-zinc-300" : "justify-start text-zinc-300"}`}>
                           {lang === "ar" ? (
                             <>
                               <span>{hlt}</span>
@@ -238,7 +238,7 @@ export default function ProjectShowcase({ lang, onContactClick }: { lang: "ar" |
                     <div className={`flex gap-2 flex-wrap ${lang === "ar" ? "justify-end" : "justify-start"}`}>
                       {selectedProject.details.tech.split("+").map((tValue, idx) => (
                         <span 
-                          key={idx}
+                          key={`tech-${selectedProject.id}-${idx}`}
                           className="bg-zinc-900 text-zinc-400 border border-zinc-800 text-[10px] sm:text-xs px-2.5 py-1 rounded"
                         >
                           {tValue.trim()}

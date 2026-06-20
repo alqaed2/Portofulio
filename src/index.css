@@ -84,3 +84,46 @@ body {
   color: #f1f5f9;
   overflow-x: hidden;
 }
+
+/* Print Media Styles to ensure high-end dual PDF formatting on print */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  /* Hide the entire interactive application */
+  #root,
+  header,
+  footer,
+  aside,
+  nav,
+  section,
+  main,
+  .fixed,
+  button,
+  iframe,
+  p:not(#cv-print-template *),
+  div:not(#cv-print-template):not(#cv-print-template *) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Selectively present only the print layout on white background */
+  #cv-print-template {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  #cv-print-template * {
+    visibility: visible !important;
+    color: black !important;
+  }
+}
