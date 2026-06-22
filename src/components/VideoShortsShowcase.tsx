@@ -228,14 +228,14 @@ export default function VideoShortsShowcase({ lang }: VideoShortsShowcaseProps) 
             />
 
             {/* Dark glass shadow vignette overlay for status icons */}
-            <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/80 via-black/10 to-transparent p-4 flex justify-between items-center pointer-events-none">
-              <div className={`flex items-center gap-2 bg-black/65 px-3 py-1.5 rounded-full border border-zinc-800/80 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/85 via-black/10 to-transparent p-3 sm:p-4 flex justify-between items-center pointer-events-none">
+              <div className={`flex items-center gap-1.5 bg-black/75 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border border-zinc-900/80 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
                 {currentVideo.icon}
-                <span className="text-xs font-mono text-white tracking-wider">
+                <span className="text-[10px] sm:text-xs font-mono text-white tracking-wider truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
                   {isRtl ? currentVideo.categoryAr : currentVideo.categoryEn}
                 </span>
               </div>
-              <span className="text-xs font-mono text-zinc-300 bg-black/50 px-2.5 py-1 rounded-md">
+              <span className="text-[10px] sm:text-xs font-mono text-zinc-300 bg-black/60 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md shrink-0">
                 {currentVideo.duration}
               </span>
             </div>
@@ -243,20 +243,20 @@ export default function VideoShortsShowcase({ lang }: VideoShortsShowcaseProps) 
             {/* Center Play/Pause Floating Overlay Icon (visible briefly on hover or when paused) */}
             <div 
               onClick={togglePlay}
-              className={`absolute inset-0 flex items-center justify-center bg-black/25 transition-all duration-300 ${isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100 placeholder:bg-black/40"}`}
+              className={`absolute inset-0 flex items-center justify-center bg-black/20 transition-all duration-300 ${isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100 placeholder:bg-black/40"}`}
             >
               <button 
                 id="btn-video-center-control"
-                className="p-5 rounded-full bg-gold-500 hover:bg-gold-400 text-black shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                className="p-3.5 sm:p-5 rounded-full bg-gold-500 hover:bg-gold-400 text-black shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer"
               >
-                {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-4 h-4 sm:w-6 sm:h-6 fill-current" /> : <Play className="w-4 h-4 sm:w-6 sm:h-6 fill-current ml-0.5" />}
               </button>
             </div>
 
             {/* Bottom HUD Overlay for Video Controls */}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-5 space-y-3">
-              {/* Dynamic Title on Video for Theater Mode */}
-              <div className={`space-y-1 ${isRtl ? "text-right" : "text-left"}`}>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent p-3 sm:p-5 space-y-2 sm:space-y-3">
+              {/* Dynamic Title on Video for Theater Mode (hidden on mobile screen as it is perfectly shown right below the video player) */}
+              <div className={`hidden sm:block space-y-1 ${isRtl ? "text-right" : "text-left"}`}>
                 <h5 className="text-xs sm:text-sm font-semibold text-white leading-tight font-sans line-clamp-1">
                   {isRtl ? currentVideo.titleAr : currentVideo.titleEn}
                 </h5>
@@ -276,7 +276,7 @@ export default function VideoShortsShowcase({ lang }: VideoShortsShowcaseProps) 
                   const percentage = clickX / rect.width;
                   videoRef.current.currentTime = percentage * videoRef.current.duration;
                 }}
-                className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden relative cursor-pointer hover:h-2 transition-all duration-150"
+                className="w-full h-1 sm:h-1.5 bg-zinc-800/80 rounded-full overflow-hidden relative cursor-pointer hover:h-2 transition-all duration-150"
               >
                 <div 
                   className="bg-gold-400 h-full rounded-full transition-all duration-100" 
@@ -290,29 +290,29 @@ export default function VideoShortsShowcase({ lang }: VideoShortsShowcaseProps) 
                   <button
                     id="btn-video-hud-play"
                     onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+                    className="p-1 sm:p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
                     title={isPlaying ? "Pause" : "Play"}
                   >
-                    {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                    {isPlaying ? <Pause className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />}
                   </button>
 
                   <button
                     id="btn-video-hud-mute"
                     onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+                    className="p-1 sm:p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
                     title={isMuted ? "Unmute" : "Mute"}
                   >
-                    {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                    {isMuted ? <VolumeX className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                   </button>
                 </div>
 
                 <button
                   id="btn-video-hud-fullscreen"
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+                  className="p-1 sm:p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
                   title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                 >
-                  {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                  {isFullscreen ? <Minimize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                 </button>
               </div>
             </div>
