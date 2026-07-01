@@ -234,18 +234,26 @@ export default function App() {
           transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
           className="w-full relative border-b border-gold-500/15 overflow-hidden bg-zinc-950/40"
         >
-          <div className="relative w-full h-[55vh] min-h-[360px] sm:h-[65vh] lg:h-[75vh] flex items-center justify-center">
+          <div className="relative w-full h-[60vh] min-h-[420px] sm:h-[65vh] lg:h-[75vh] flex items-center justify-center">
             
+            {/* Ambient Blurred Background to prevent cropped layout gaps and fill empty space elegantly */}
+            <img
+              src={HERO_PORTRAIT}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-35 scale-105 pointer-events-none select-none"
+            />
+
             {/* Subtle Ambient Vignette & Blueprint grid background behind / on top */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#030304] via-transparent to-[#030304]/70 z-10" />
             <div className="absolute inset-0 bg-[linear-gradient(rgba(175,134,41,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(175,134,41,0.015)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none z-10" />
 
-            {/* Majestic Image stretched horizontally */}
+            {/* Complete, uncropped high-precision portrait in foreground */}
             <img
               src={HERO_PORTRAIT}
               alt="المهندس محمد الحذيفي المعمار الفخم"
               referrerPolicy="no-referrer"
-              className="w-full h-full object-cover object-top sm:object-center scale-[1.01] hover:scale-[1.03] transition-all duration-1000 ease-out"
+              className="relative z-10 max-w-full max-h-full object-contain object-bottom sm:object-center transition-all duration-1000 ease-out scale-[1.01] hover:scale-[1.03]"
             />
 
             {/* Floating technical indicators HUD overlay (Responsive positions) */}
