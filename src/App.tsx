@@ -34,7 +34,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import CVModal from "./components/CVModal";
 import VideoShortsShowcase from "./components/VideoShortsShowcase";
 
-import HERO_PORTRAIT from "./assets/images/1781787875080.png";
+import HERO_PORTRAIT from "./assets/images/185258.png";
 
 // Reusable scroll reveal component to provide VIP animation feel on all sections
 function RevealSection({ children, id, className = "" }: { children: ReactNode; id?: string; className?: string }) {
@@ -234,7 +234,7 @@ export default function App() {
           transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
           className="w-full relative border-b border-gold-500/15 overflow-hidden bg-zinc-950/40"
         >
-          <div className="relative w-full h-[60vh] min-h-[420px] sm:h-[65vh] lg:h-[75vh] flex items-center justify-center">
+          <div className="relative w-full aspect-[1672/940] min-h-[320px] sm:min-h-[420px] md:min-h-[480px] lg:min-h-[560px] max-h-[75vh] md:max-h-[85vh] flex items-center justify-center bg-[#030304]">
             
             {/* Ambient Blurred Background to prevent cropped layout gaps and fill empty space elegantly */}
             <img
@@ -248,12 +248,12 @@ export default function App() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#030304] via-transparent to-[#030304]/70 z-10" />
             <div className="absolute inset-0 bg-[linear-gradient(rgba(175,134,41,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(175,134,41,0.015)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none z-10" />
 
-            {/* Complete, uncropped high-precision portrait in foreground */}
+            {/* Complete, high-precision cover banner filling the entire space perfectly */}
             <img
               src={HERO_PORTRAIT}
               alt="المهندس محمد الحذيفي المعمار الفخم"
               referrerPolicy="no-referrer"
-              className="relative z-10 max-w-full max-h-full object-contain object-bottom sm:object-center transition-all duration-1000 ease-out scale-[1.01] hover:scale-[1.03]"
+              className="w-full h-full object-contain object-center transition-all duration-1000 ease-out scale-[1.01] hover:scale-[1.03]"
             />
 
             {/* Floating technical indicators HUD overlay (Responsive positions) */}
